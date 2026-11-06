@@ -31,7 +31,7 @@ function stats(){
  const regular=statsTab==='volume';
  const tabs='<div class="tabs">'+button('tab','Performances','progress',regular?'':'done')+button('tab','Régularité','volume',regular?'done':'')+'</div>';
  if(regular)return '<h1>Progrès</h1>'+tabs+regularity();
- const head='<h1>Progrès</h1>'+tabs+gymLine();
+ const head='<h1>Progrès</h1>'+tabs+gymLine()+(detail?'':pinnedList());
  if(detail)return head+exerciseDetail();
  const latest=state.sessions.filter(s=>s.done&&s.gym===gym).sort((a,b)=>b.date.localeCompare(a.date)||b.created-a.created)[0];
  const picker=field('Consulter un exercice',select('browseEx',option('','Choisir un exercice…','')+exOptions('')));
@@ -85,7 +85,7 @@ function exerciseDetail(){
   return {...p,v};
  }).filter(p=>p.v!==null);
  const unit=['reps','total'].includes(metric)?' rép.':' kg',delta=points.length>1?points.at(-1).v-points[0].v:null;
- return button('summary','‹ Bilan de la salle','','link')+'<div class="exercise-heading"><h2>'+esc(e.name)+'</h2><span class="thumbnail">'+exerciseArt(e.id)+'</span></div>'+(e.kind==='pdc'?field('Variante',select('detailMode',['pdc','aide','lest'].map(k=>option(k,modes[k],mode)).join(''))):'')+periodPicker()+field('Indicateur',select('detailMetric',allowed.map(k=>option(k,names[k],metric)).join('')))+filter+(delta===null?'':'<div class="metric">'+signed(delta)+unit+'</div><small>Du '+dateLabel(points[0].s.date)+' au '+dateLabel(points.at(-1).s.date)+'</small>')+interactiveChart(points)+'<section><h2>Comparer deux séances</h2>'+compareTable(windowed)+'</section>'+recordList(history);
+ return button('summary','‹ Bilan de la salle','','link')+'<div class="exercise-heading"><h2>'+esc(e.name)+'</h2><span class="thumbnail">'+exerciseArt(e.id)+'</span></div>'+button('pin',(state.pins||[]).some(pinMatches)?'Désépingler':'Épingler cet exercice')+(e.kind==='pdc'?field('Variante',select('detailMode',['pdc','aide','lest'].map(k=>option(k,modes[k],mode)).join(''))):'')+periodPicker()+field('Indicateur',select('detailMetric',allowed.map(k=>option(k,names[k],metric)).join('')))+filter+(delta===null?'':'<div class="metric">'+signed(delta)+unit+'</div><small>Du '+dateLabel(points[0].s.date)+' au '+dateLabel(points.at(-1).s.date)+'</small>')+interactiveChart(points)+'<section><h2>Comparer deux séances</h2>'+compareTable(windowed)+'</section>'+recordList(history);
 }
 function regularity(){
  const sessions=state.sessions.filter(s=>s.done&&(regularGym==='all'||s.gym===regularGym)&&inPeriod(s.date));

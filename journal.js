@@ -13,16 +13,18 @@ function history(){
  let cells='<span></span>'.repeat((first.getDay()+6)%7);
  for(let n=1;n<=days;n++){
   const day=month+'-'+String(n).padStart(2,'0'), matches=entries.filter(s=>s.date===day);
-  const markers=matches.slice(0,3).map(s=>'<i class="p'+s.plan+'"></i>').join('');
-  cells+='<button type="button" data-act="day" data-id="'+day+'" aria-pressed="'+(day===journalDay)+'" aria-label="'+dateLabel(day)+' · '+matches.length+' séance(s)" class="day '+(day===today()?'today ':'')+(day===journalDay?'selected':'')+'">'+n+'<span>'+markers+'</span></button>';
+  const markers=matches.map(s=>'<i class="p'+s.plan+' '+statusIcon(s)+'"></i>').join('');
+  cells+='<button type="button" data-act="day" data-id="'+day+'" aria-pressed="'+(day===journalDay)+'" aria-label="'+dateLabel(day)+' · '+esc(matches.map(s=>programs[s.plan]+' '+statusName(s)).join(', '))+'" class="day '+(day===today()?'today ':'')+(day===journalDay?'selected':'')+'">'+n+'<span>'+markers+'</span></button>';
  }
  const selected=entries.filter(s=>s.date===journalDay);
  const agenda=selected.map(s=>{
   const planned=s.planned===true;
-  const actions=planned?(s.date<=today()?button('launchPlan','Commencer',s.id,'primary'):'')+button('unplan','Retirer',s.id):button('open',s.done?'Voir la séance':'Reprendre',s.id);
+  const actions=planned?(s.date<=today()?button('launchPlan','Commencer',s.id,'primary'):'')+button('movePlan','Déplacer',s.id)+button('unplan','Retirer',s.id):button('open',s.done?'Voir la séance':'Reprendre',s.id);
   return '<article class="event p'+s.plan+'"><small>'+esc(gymName(s.gym))+' · '+(planned?'Planifiée':s.done?'Terminée':'En cours')+'</small><h3>'+programs[s.plan]+'</h3>'+actions+'</article>';
  }).join('');
- return '<h1>Journal</h1>'+field('Salles affichées',gymFilter('journalGym',journalGym))+'<section class="calendar"><div class="month-head">'+button('month','‹',-1)+'<h2>'+date.toLocaleDateString('fr-FR',{month:'long',year:'numeric'})+'</h2>'+button('month','›',1)+'</div><div class="days">'+['L','M','M','J','V','S','D'].map(n=>'<small>'+n+'</small>').join('')+cells+'</div>'+button('day','Aujourd’hui',today(),'link')+'</section><div class="legend">'+programs.map((n,i)=>'<small><i class="p'+i+'"></i>'+n+'</small>').join('')+'</div><section><h2>'+dateLabel(journalDay)+'</h2>'+ (agenda||'<p class="sub">Aucune séance ce jour.</p>')+(journalDay<=today()?button('retro','+ Saisir une séance'):'')+(journalDay>=today()?button('schedule','Planifier une séance','','primary'):'')+'</section>';
+ const moving=state.agenda?.find(t=>t.id===movingPlan);
+ const prompt=moving?'<div class="move-hint"><b>Déplacer · '+programs[moving.plan]+'</b><p>Touche le nouveau jour dans le calendrier.</p>'+button('stopMove','Annuler')+'</div>':'';
+ return '<h1>Journal</h1>'+prompt+field('Salles affichées',gymFilter('journalGym',journalGym))+'<section class="calendar"><div class="month-head">'+button('month','‹',-1)+'<h2>'+date.toLocaleDateString('fr-FR',{month:'long',year:'numeric'})+'</h2>'+button('month','›',1)+'</div><div class="days">'+['L','M','M','J','V','S','D'].map(n=>'<small>'+n+'</small>').join('')+cells+'</div>'+button('day','Aujourd’hui',today(),'link')+'</section><div class="legend">'+programs.map((n,i)=>'<small><i class="p'+i+'"></i>'+n+'</small>').join('')+'</div><div class="legend states"><small><i class="planned"></i>Prévue</small><small><i class="ongoing"></i>En cours</small><small><i class="complete"></i>Terminée</small></div><section><h2>'+dateLabel(journalDay)+'</h2>'+ (agenda||'<p class="sub">Aucune séance ce jour.</p>')+(journalDay<=today()?button('retro','+ Saisir une séance'):'')+(journalDay>=today()?button('schedule','Planifier une séance','','primary'):'')+'</section>';
 }
 function chooseSession(title,day,fn,allowDate=false){
  modal(title,(allowDate?field('Date','<input type="date" name="date" required value="'+day+'" max="'+today()+'">'):'')+field('Salle','<select name="gym">'+state.gyms.map(g=>option(g.id,g.name,journalGym==='all'?gym:journalGym)).join('')+'</select>')+field('Programme','<select name="plan">'+programs.map((n,i)=>option(i,n,nextPlan())).join('')+'</select>'),v=>fn({id:uid(),date:v.date||day,gym:v.gym,plan:Number(v.plan)}));

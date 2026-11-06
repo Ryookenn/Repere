@@ -94,3 +94,11 @@ body:has(.current-set) #clock,body:has(.dock) #clock{bottom:calc(var(--action-bo
 .day.today{outline:1px solid var(--red);outline-offset:-2px}.day.selected{background:var(--button);color:white}.day span{height:7px;display:flex;gap:2px;align-items:center}
 .legend{display:flex;gap:10px;flex-wrap:wrap}.legend small{display:flex;align-items:center;gap:4px}.day i,.legend i{width:6px;height:6px;border-radius:50%;background:var(--session-color)}
 .p0{--session-color:#e25c40}.p1{--session-color:#698eca}.p2{--session-color:#71a278}.selected i{outline:1px solid #fff}.event{border-left:4px solid var(--session-color);padding:10px 14px;background:var(--panel);margin:10px 0}.event button+button{margin-left:6px}
+.day span{height:auto;min-height:10px;max-width:100%;flex-wrap:wrap;justify-content:center}
+.day i,.states i{display:inline-block;width:9px;height:9px;border-radius:50%;border:1.5px solid var(--session-color,currentColor)}
+.day i.planned,.states i.planned{background:transparent}
+.day i.ongoing,.states i.ongoing{background:linear-gradient(90deg,var(--session-color,currentColor) 50%,transparent 50%)}
+.day i.complete,.states i.complete{background:var(--session-color,currentColor)}
+.day.selected{background:var(--wash);color:var(--ink);box-shadow:inset 0 0 0 2px var(--red)}.day.selected i{outline:none}
+.states{margin-top:8px}.move-hint{padding:15px;background:var(--wash);border-radius:12px}
+.report-row{display:flex;gap:12px;padding:16px 0;border-top:1px solid var(--line)}.report-row h3,.report-row p{margin:3px 0}.report-row p{color:var(--muted);font-size:14px}

@@ -44,9 +44,9 @@ function plot(points){
 function settings(){return '<h1>Réglages</h1><section><h2>Apparence</h2>'+field('Thème de l’application',select('appearance',Object.entries(appearance.choices).map(([key,label])=>option(key,label,appearance.value)).join('')))+'</section><section><h2>Mes salles</h2>'+state.gyms.map(g=>'<p>'+esc(g.name)+'</p>').join('')+button('gym','+ Ajouter une salle')+'</section><details class="settings-group"><summary>Modifier mon programme</summary>'+select('plan',programs.map((n,i)=>option(i,n,plan)).join(''))+state.plans[plan].map((id,i)=>'<div class="row spread"><span>'+esc(exercise(id).name)+'</span><div>'+button('planUp','↑',i)+button('planDown','↓',i)+button('planRemove','−',i)+'</div></div>').join('')+button('planAdd','+ Exercice au programme')+' '+button('custom','Créer un exercice')+'</details><section><h2>Repos entre séries</h2>'+field('Durée en secondes · 0 pour désactiver','<input data-key="rest" type="number" min="0" max="3600" value="'+state.rest+'">')+'</section><section><h2>Synchronisation</h2><p>'+(!configured?'Mode local. Renseigne config.js pour activer Supabase.':token?'Compte · '+esc(token.user.email)+'<br>Dernière synchronisation réussie · '+esc(lastSyncLabel()):'Connecte ton compte Supabase pour sauvegarder ton carnet.')+'</p>'+(cloudError?'<p class="bad">'+esc(cloudError)+'</p>':'')+(conflict?'<p>Une autre version existe en ligne. Exporte ta copie locale avant de charger la version en ligne.</p>'+button('export','Exporter ma copie')+' '+button('resolve','Charger la version en ligne'):'')+(configured?button('login',token?'Renouveler la connexion':'Me connecter')+' '+(token?button('sync','Synchroniser'):''):'')+'</section>'}
 function render(){
  if(!state.gyms.some(g=>g.id===gym))gym=state.gyms[0]?.id||'';
- if(['session','overview'].includes(page)&&!session())page='home';
- $('nav').innerHTML=navs.map(([id,icon,n])=>button('nav',navGlyph(id)+n,id,(page===id||(id==='home'&&['session','overview'].includes(page)))?'on':'')).join('');
- $('#app').innerHTML=page==='home'?(configured&&!token&&!localStorage.getItem('onemore.local')?onboarding():dashboard()):page==='settings'?settings():page==='session'?focusedWorkout(session()):page==='overview'?overview(session()):!gym?dashboard():page==='stats'?(returnFromProgress?button('backWorkout','‹ Revenir à mon exercice','','link'):'')+stats():history();statusText()
+ if(['session','overview','report'].includes(page)&&!session())page='home';
+ $('nav').innerHTML=navs.map(([id,icon,n])=>button('nav',navGlyph(id)+n,id,(page===id||(id==='history'&&page==='report')||(id==='home'&&['session','overview'].includes(page)))?'on':'')).join('');
+ $('#app').innerHTML=page==='home'?(configured&&!token&&!localStorage.getItem('onemore.local')?onboarding():dashboard()):page==='settings'?settings():page==='session'?focusedWorkout(session()):page==='report'?sessionReport(session()):page==='overview'?overview(session()):!gym?dashboard():page==='stats'?(returnFromProgress?button('backWorkout','‹ Revenir à mon exercice','','link'):'')+stats():history();statusText()
 }
 function askExercise(cb){modal('Choisir un exercice',field('Exercice','<select name="ex">'+exOptions('')+'</select>'),v=>{cb(v.ex);changed();render()})}
 function swap(list,i,d){if(i+d>=0&&i+d<list.length)[list[i],list[i+d]]=[list[i+d],list[i]]}
@@ -55,14 +55,23 @@ document.addEventListener('click',e=>{
  const b=e.target.closest('[data-act]');if(!b)return;
  const a=b.dataset.act,id=b.dataset.id||'',[i,j]=id.split(',').map(Number),s=session(),x=s?.items[i];
  if(a==='cancel')return $('dialog').close();
- if(a==='settings'||a==='nav'){returnFromProgress=null;if(id==='stats'){detail=false;statsTab='progress'}page=a==='settings'?'settings':id;render();scrollTo(0,0);return}
+ if(a==='settings'||a==='nav'){returnFromProgress=null;movingPlan='';if(id==='stats'){detail=false;statsTab='progress'}page=a==='settings'?'settings':id;render();scrollTo(0,0);return}
  if(a==='gym')return modal('Ajouter une salle',field('Nom de la salle',nameInput()),v=>{const name=v.name.trim();if(!name||state.gyms.some(g=>g.name.toLowerCase()===name.toLowerCase()))return alert('Choisis un nom de salle distinct.');gym=uid();state.gyms.push({id:gym,name});localStorage.setItem('repere.gym',gym);changed();render()});
  if(a==='custom')return modal('Créer un exercice',field('Nom',nameInput())+field('Groupe musculaire principal',nameInput('muscle'))+field('Type','<select name="kind">'+kinds.map(k=>option(k,k==='pdc'?'Poids du corps':k,'machine')).join('')+'</select>'),v=>{state.ex.push({id:uid(),name:v.name.trim(),muscle:v.muscle.trim(),kind:v.kind});changed();render()});
  if(a==='start')return start(+id);
  if(a==='retro')return chooseSession('Saisir une séance',journalDay,v=>{gym=v.gym;start(v.plan);session().date=v.date;changed();render()},true);
  if(a==='schedule')return chooseSession('Planifier le '+dateLabel(journalDay),journalDay,v=>{state.agenda??=[];state.agenda.push({...v,planned:true});changed();render()});
  if(a==='unplan'){if(confirm('Retirer cette séance du planning ?')){state.agenda=state.agenda.filter(t=>t.id!==id);changed();render()}return}
- if(a==='launchPlan'){const entry=state.agenda?.find(t=>t.id===id);if(!entry)return;gym=entry.gym;state.agenda=state.agenda.filter(t=>t.id!==id);start(entry.plan);return}
+ if(a==='launchPlan')return launchScheduled(id);
+ if(a==='editReport'&&s?.done){page='overview';render();scrollTo(0,0);return}
+ if(a==='reportJournal'&&s){journalDay=s.date;journalGym=s.gym;page='history';render();scrollTo(0,0);return}
+ if(a==='pin')return pinToggle();
+ if(a==='movePlan'){movingPlan=id;render();scrollTo(0,0);return}
+ if(a==='stopMove'){movingPlan='';render();return}
+ if(a==='day'&&movingPlan){
+  const entry=state.agenda?.find(t=>t.id===movingPlan);
+  if(entry){entry.date=id;changed()}movingPlan='';journalDay=id;render();return
+ }
  if(a==='cancelDraft')return cancelDraft(state.sessions.find(t=>t.id===id));
  if(a==='month'||a==='day'){journalDay=a==='month'?monthShift(journalDay,+id):id;render();return}
  if(a==='summary'){detail=false;render();return}
@@ -71,8 +80,8 @@ document.addEventListener('click',e=>{
  if(a==='journalPoint'){const event=state.sessions.find(t=>t.id===id);if(event){journalDay=event.date;journalGym=event.gym;page='history';render();scrollTo(0,0)}return}
  if(a==='local'){localStorage.setItem('onemore.local','1');render();return}
  if(a==='homeItem'){
-  const draft=state.sessions.filter(t=>t.gym===gym&&!t.done).sort((a,b)=>b.created-a.created)[0];
-  if(draft)active=draft.id;else start(nextPlan(),i);
+  const {draft,scheduled}=homeChoice();
+  if(draft){active=draft.id;gym=draft.gym}else if(scheduled)launchScheduled(scheduled.id,i);else start(nextPlan(),i);
   return focusItem(session(),i);
  }
  if(a==='endExercise')return finishExercise(s,x,i);
@@ -88,7 +97,7 @@ document.addEventListener('click',e=>{
  if(a==='focus')return focusItem(s,i);
  if(a==='overview'){page='overview';render();scrollTo(0,0);return}
  if(a==='nextItem'){if(i+1<s.items.length)return focusItem(s,i+1);page='overview';render();scrollTo(0,0);return}
- if(a==='open'){active=id;page=session()?.done?'overview':'session';render();scrollTo(0,0);return}
+ if(a==='open'){active=id;if(session())gym=session().gym;page=session()?.done?'report':'session';render();scrollTo(0,0);return}
  if(a==='tab'){statsTab=id;render();return}
  if(a==='login')return modal('Connexion',field('E-mail','<input type="email" name="email" required autocomplete="username">')+field('Mot de passe','<input type="password" name="password" required autocomplete="current-password">'),async v=>{await login(v.email,v.password);render()},'Me connecter');
  if(a==='sync')return sync();
@@ -115,7 +124,7 @@ document.addEventListener('click',e=>{
  const all=s.items.flatMap(x=>x.sets);
  if(!all.some(r=>r.ok))return alert('Valide au moins une série avec ✓.');
  if(all.some(r=>!r.ok&&(r.reps!==''||r.kg!==''))&&!confirm('Certaines valeurs sont saisies mais non validées. Terminer avec les séries cochées uniquement ?'))return;
- s.items.forEach(x=>x.sets=x.sets.filter(r=>r.ok));s.items=s.items.filter(x=>x.sets.length);s.done=true;journalDay=s.date;journalGym=s.gym;page='history';localStorage.removeItem('repere.timer');tick();scrollTo(0,0)
+ s.items.forEach(x=>x.sets=x.sets.filter(r=>r.ok));s.items=s.items.filter(x=>x.sets.length);s.done=true;journalDay=s.date;journalGym=s.gym;page='report';localStorage.removeItem('repere.timer');tick();scrollTo(0,0)
  }
  changed();render()
 });
@@ -133,7 +142,7 @@ document.addEventListener('change',e=>{
  if(key==='loadChoice')target=Number(v);
  if(key==='detailMetric'){metric=v;target=metric==='load'?8:Number(performances(state,gym,statEx,mode).at(-1)?.rows.at(-1)?.kg||0);pointId=''}
  if(key==='appearance')appearance.set(v);
- if(key==='gym'){gym=v;localStorage.setItem('repere.gym',gym);pair=[];detail=false}
+ if(key==='gym'){homeGymExplicit=true;gym=v;localStorage.setItem('repere.gym',gym);pair=[];detail=false}
  if(key==='plan')plan=+v;
  if(key==='rest'){if(v===''||!Number.isInteger(+v)||+v<0||+v>3600)return render();state.rest=+v;changed()}
  if(key==='date'){if(!v||v>today())return render();session().date=v;changed()}
