@@ -26,6 +26,7 @@ function validateRow(s,x,i,j){
  const before=JSON.stringify(x.sets),priorTimer=localStorage.getItem('repere.timer');
  const row=materialize(s,x,j);row.ok=!was;
  if(was){x.finished=false;undoSet=null;return true}
+ setNotice=!s.done;
  if(!s.done&&!x.finished&&!x.sets.some(r=>!r.ok)&&x.sets.length<targetSets(s,x))x.sets.push(emptySet());
  const seconds=exercise(x.ex).rest??state.rest;
  if(!s.done&&s.date===today()&&seconds){localStorage.setItem('onemore.timerOwner',s.id);localStorage.setItem('repere.timer',Date.now()+seconds*1000)}

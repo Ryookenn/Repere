@@ -46,7 +46,7 @@ function render(){
  if(!state.gyms.some(g=>g.id===gym))gym=state.gyms[0]?.id||'';
  if(['session','overview','report'].includes(page)&&!session())page='home';
  $('nav').innerHTML=navs.map(([id,icon,n])=>button('nav',navGlyph(id)+n,id,(page===id||(id==='history'&&page==='report')||(id==='home'&&['session','overview'].includes(page)))?'on':'')).join('');
- $('#app').innerHTML=page==='home'?(configured&&!token&&!localStorage.getItem('onemore.local')?onboarding():dashboard()):page==='settings'?settings():page==='session'?focusedWorkout(session()):page==='report'?sessionReport(session()):page==='overview'?overview(session()):!gym?dashboard():page==='stats'?(returnFromProgress?button('backWorkout','‹ Revenir à mon exercice','','link'):'')+stats():history();statusText()
+ $('#app').innerHTML=page==='home'?(configured&&!token&&!localStorage.getItem('onemore.local')?onboarding():dashboard()):page==='settings'?settings():page==='session'?focusedWorkout(session()):page==='report'?sessionReport(session()):page==='overview'?overview(session()):!gym?dashboard():page==='stats'?(returnFromProgress?button('backWorkout','‹ Revenir à mon exercice','','link'):'')+stats():history();statusText();finishNotice='';movedNotice='';if(setNotice){const next=$('#app .current-set [data-act="check"], #app .dock, #app [data-act="addSet"]');if(next){next.classList.add('set-feedback');setTimeout(()=>next.classList.remove('set-feedback'),550)}setNotice=false}
 }
 function askExercise(cb){modal('Choisir un exercice',field('Exercice','<select name="ex">'+exOptions('')+'</select>'),v=>{cb(v.ex);changed();render()})}
 function swap(list,i,d){if(i+d>=0&&i+d<list.length)[list[i],list[i+d]]=[list[i+d],list[i]]}
@@ -70,7 +70,7 @@ document.addEventListener('click',e=>{
  if(a==='stopMove'){movingPlan='';render();return}
  if(a==='day'&&movingPlan){
   const entry=state.agenda?.find(t=>t.id===movingPlan);
-  if(entry){entry.date=id;changed()}movingPlan='';journalDay=id;render();return
+  if(entry){if(entry.date!==id)movedNotice=entry.id;entry.date=id;changed()}movingPlan='';journalDay=id;render();return
  }
  if(a==='cancelDraft')return cancelDraft(state.sessions.find(t=>t.id===id));
  if(a==='month'||a==='day'){journalDay=a==='month'?monthShift(journalDay,+id):id;render();return}
@@ -124,6 +124,7 @@ document.addEventListener('click',e=>{
  const all=s.items.flatMap(x=>x.sets);
  if(!all.some(r=>r.ok))return alert('Valide au moins une série avec ✓.');
  if(all.some(r=>!r.ok&&(r.reps!==''||r.kg!==''))&&!confirm('Certaines valeurs sont saisies mais non validées. Terminer avec les séries cochées uniquement ?'))return;
+ if(!s.done)finishNotice=s.id;
  s.items.forEach(x=>x.sets=x.sets.filter(r=>r.ok));s.items=s.items.filter(x=>x.sets.length);s.done=true;journalDay=s.date;journalGym=s.gym;page='report';localStorage.removeItem('repere.timer');tick();scrollTo(0,0)
  }
  changed();render()
@@ -153,7 +154,7 @@ document.addEventListener('change',e=>{
  if(key==='A'||key==='B')pair[key==='A'?0:1]=v;
  render()
 });
-function tick(){const end=Number(localStorage.getItem('repere.timer'));const el=$('#clock');const undo=document.querySelector('[data-act="undo"]');if(undo&&(!undoSet||Date.now()>undoSet.expires))undo.hidden=true;el.hidden=!end;if(end){const left=Math.max(0,Math.ceil((end-Date.now())/1000));el.innerHTML='<b>'+(left?'Repos · '+Math.floor(left/60)+':'+String(left%60).padStart(2,'0'):'Repos terminé')+'</b> '+button('stop','Fermer')}}
+function tick(){const end=Number(localStorage.getItem('repere.timer'));const el=$('#clock');const undo=document.querySelector('[data-act="undo"]');if(undo&&(!undoSet||Date.now()>undoSet.expires))undo.hidden=true;el.hidden=!end;if(end){const left=Math.max(0,Math.ceil((end-Date.now())/1000));const pulse=!left&&lastRestEnd!==end;if(pulse)lastRestEnd=end;el.innerHTML=(pulse?'<b class="rest-pulse">':'<b>')+(left?'Repos · '+Math.floor(left/60)+':'+String(left%60).padStart(2,'0'):'Repos terminé')+'</b> '+button('stop','Fermer')}}
 setInterval(tick,1000);tick();render();sync();
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){tick();sync()}});
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(console.error);

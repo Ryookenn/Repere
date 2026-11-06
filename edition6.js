@@ -15,6 +15,7 @@ function launchScheduled(id,first=0){
  start(s.plan,first);
 }
 function sessionReport(s){
+ const celebrate=finishNotice===s.id;
  const gone=new Set(),lines=[];
  for(const x of s.items){
   const key=x.ex+'|'+x.mode;
@@ -25,9 +26,11 @@ function sessionReport(s){
   const rows=hist[index].rows;
   const fixed=rows.every(r=>Number(r.kg)===Number(rows[0].kg));
   const series=(fixed||x.mode==='pdc')?(x.mode==='pdc'?'':fmt(rows[0].kg)+' kg · ')+rows.map(r=>r.reps).join(' / ')+' rép.':rows.map(r=>setText(r,x.mode)).join('　/　');
-  lines.push('<article class="report-row"><span class="thumbnail">'+exerciseArt(x.ex)+'</span><div><small>'+esc(exercise(x.ex).muscle)+(x.mode==='charge'?'':' · '+esc(modes[x.mode]))+'</small><h3>'+esc(exercise(x.ex).name)+'</h3><b>'+series+'</b><p>'+compareRows(hist[index-1]?.rows,rows,x.mode)+'</p></div></article>');
+  const message=recordMessage(hist,index,x.mode);
+  const badge=message?'<div class="record-badge'+(celebrate?' record-enter':'')+'"><strong>Nouveau record</strong> · '+message+'</div>':'';
+  lines.push('<article class="report-row"><span class="thumbnail">'+exerciseArt(x.ex)+'</span><div><small>'+esc(exercise(x.ex).muscle)+(x.mode==='charge'?'':' · '+esc(modes[x.mode]))+'</small><h3>'+esc(exercise(x.ex).name)+'</h3><b>'+series+'</b>'+badge+'<p>'+compareRows(hist[index-1]?.rows,rows,x.mode)+'</p></div></article>');
  }
- return '<div class="work-top">'+button('reportJournal','‹ Journal','','link')+button('editReport','Modifier',s.id)+'</div><div class="tag">Bilan de séance</div><h1>'+programs[s.plan]+'</h1><p>'+dateLabel(s.date)+' · '+esc(gymName(s.gym))+'</p>'+lines.join('');
+ return '<div class="work-top">'+button('reportJournal','‹ Journal','','link')+button('editReport','Modifier',s.id)+'</div>'+(celebrate?finishGraphic():'')+'<div class="tag">Bilan de séance</div><h1>'+programs[s.plan]+'</h1><p>'+dateLabel(s.date)+' · '+esc(gymName(s.gym))+'</p>'+lines.join('');
 }
 function pinMatches(p){return p.ex===statEx&&p.mode===mode&&p.gym===gym}
 function pinToggle(){

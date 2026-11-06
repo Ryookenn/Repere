@@ -13,7 +13,7 @@ function history(){
  let cells='<span></span>'.repeat((first.getDay()+6)%7);
  for(let n=1;n<=days;n++){
   const day=month+'-'+String(n).padStart(2,'0'), matches=entries.filter(s=>s.date===day);
-  const markers=matches.map(s=>'<i class="p'+s.plan+' '+statusIcon(s)+'"></i>').join('');
+  const markers=matches.map(s=>'<i class="p'+s.plan+' '+statusIcon(s)+(s.id===movedNotice?' moved-mark':'')+'"></i>').join('');
   cells+='<button type="button" data-act="day" data-id="'+day+'" aria-pressed="'+(day===journalDay)+'" aria-label="'+dateLabel(day)+' · '+esc(matches.map(s=>programs[s.plan]+' '+statusName(s)).join(', '))+'" class="day '+(day===today()?'today ':'')+(day===journalDay?'selected':'')+'">'+n+'<span>'+markers+'</span></button>';
  }
  const selected=entries.filter(s=>s.date===journalDay);
