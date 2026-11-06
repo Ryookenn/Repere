@@ -30,7 +30,7 @@ function sessionReport(s){
   const badge=message?'<div class="record-badge'+(celebrate?' record-enter':'')+'"><strong>Nouveau record</strong> · '+message+'</div>':'';
   lines.push('<article class="report-row"><span class="thumbnail">'+exerciseArt(x.ex)+'</span><div><small>'+esc(exercise(x.ex).muscle)+(x.mode==='charge'?'':' · '+esc(modes[x.mode]))+'</small><h3>'+esc(exercise(x.ex).name)+'</h3><b>'+series+'</b>'+badge+'<p>'+compareRows(hist[index-1]?.rows,rows,x.mode)+'</p></div></article>');
  }
- return '<div class="work-top">'+button('reportJournal','‹ Journal','','link')+button('editReport','Modifier',s.id)+'</div>'+(celebrate?finishGraphic():'')+'<div class="tag">Bilan de séance</div><h1>'+programs[s.plan]+'</h1><p>'+dateLabel(s.date)+' · '+esc(gymName(s.gym))+'</p>'+lines.join('');
+ return '<div class="work-top">'+button('reportJournal','‹ Journal','','link')+button('editReport','Modifier',s.id)+'</div>'+'<div class="tag">Bilan de séance</div><h1>'+programs[s.plan]+'</h1><p>'+dateLabel(s.date)+' · '+esc(gymName(s.gym))+'</p>'+lines.join('');
 }
 function pinMatches(p){return p.ex===statEx&&p.mode===mode&&p.gym===gym}
 function pinToggle(){

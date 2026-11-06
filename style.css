@@ -121,3 +121,16 @@ body:has(.current-set) #clock,body:has(.dock) #clock{bottom:calc(var(--action-bo
 @keyframes om-cross{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0)}}
 @keyframes om-pulse{50%{transform:scale(1.06);color:var(--red)}}
 @keyframes om-bounce{0%{transform:translateY(-5px) scale(.7)}65%{transform:scale(1.2)}100%{transform:none}}
+
+.encore{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;background:rgba(9,10,13,.83);color:white;text-align:center;animation:encore-in .15s ease-out}
+.encore-card{padding:24px;max-width:360px;display:grid;justify-items:center;gap:12px;animation:encore-rise .26s ease-out}
+.encore-card>strong{font:700 clamp(25px,7vw,40px)/1.05 system-ui;letter-spacing:-.045em}
+.encore-card>small{color:#fff;font:500 15px/1.45 system-ui}
+.encore-card>svg{width:56px;height:56px;fill:none;stroke:#ff493e;stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round}
+.encore-card>svg path{stroke-dasharray:90;animation:encore-draw .4s ease-out}
+.encore-card .finish-mark{display:block;background:none;border:0;padding:0;margin:0;color:#ff493e}
+.encore-card .finish-mark svg{width:108px;height:auto}
+@keyframes encore-in{from{opacity:0}}
+@keyframes encore-rise{from{transform:translateY(8px) scale(.94);opacity:0}}
+@keyframes encore-draw{from{stroke-dashoffset:90}}
+@media(prefers-reduced-motion:reduce){.encore,.encore *{animation:none!important;transition:none!important}}

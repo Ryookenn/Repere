@@ -22,3 +22,33 @@ function recordMessage(hist,index,mode){
  }
  return '';
 }
+
+let celebrationTimer;
+function showCelebration(kind,record){
+ const labels={finish:'Séance terminée',set:'Série validée',move:'Séance déplacée',rest:'Repos terminé'};
+ const durations={finish:record?2800:2000,set:700,move:1000,rest:950};
+ const layer=document.querySelector('.encore')||document.createElement('div');
+ clearTimeout(celebrationTimer);
+ layer.remove();
+ layer.className='encore encore-'+kind;
+ const card=document.createElement('div');
+ card.className='encore-card';
+ card.setAttribute('role','status');
+ if(kind==='finish')card.innerHTML=finishGraphic().replace('<strong>Séance terminée</strong>','');
+ else {
+  const paths={set:'M5 13l5 5L21 6',move:'M4 12h16m-7-7 7 7-7 7',rest:'M9 3h6m-3 5v5l3 2 M20 14a8 8 0 1 1-16 0 8 8 0 1 1 16 0'};
+  card.innerHTML='<svg aria-hidden="true" viewBox="0 0 24 24"><path d="'+paths[kind]+'"/></svg>';
+ }
+ const title=document.createElement('strong');
+ title.textContent=labels[kind];
+ card.append(title);
+ if(record){
+  const detail=document.createElement('small');
+  detail.textContent=record.querySelector('h3').textContent+' · '+record.querySelector('.record-badge').textContent;
+  card.append(detail);
+ }
+ layer.replaceChildren(card);
+ document.body.append(layer);
+ layer.onclick=()=>{clearTimeout(celebrationTimer);layer.remove()};
+ celebrationTimer=setTimeout(()=>layer.remove(),durations[kind]);
+}
