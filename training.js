@@ -28,7 +28,7 @@ function validateRow(s,x,i,j){
  if(was){x.finished=false;undoSet=null;return true}
  if(!s.done&&!x.finished&&!x.sets.some(r=>!r.ok)&&x.sets.length<targetSets(s,x))x.sets.push(emptySet());
  const seconds=exercise(x.ex).rest??state.rest;
- if(!s.done&&s.date===today()&&seconds)localStorage.setItem('repere.timer',Date.now()+seconds*1000);
+ if(!s.done&&s.date===today()&&seconds){localStorage.setItem('onemore.timerOwner',s.id);localStorage.setItem('repere.timer',Date.now()+seconds*1000)}
  undoSet={session:s.id,item:x.id,before,after:JSON.stringify(x.sets),priorTimer,expires:Date.now()+10000};
  tick();return true;
 }
@@ -49,7 +49,7 @@ function finishExercise(s,x,i){
 }
 function openProgress(s,x){
  returnFromProgress={session:s.id,gym:s.gym,item:x.id};
- gym=s.gym;statEx=x.ex;mode=x.mode;statsTab='progress';metric='reps';
+ gym=s.gym;enterDetail(x.ex,x.mode);
  const j=x.sets.findIndex(r=>!r.ok);
  const ref=j>=0?displayedSet(s,x,j):x.sets.at(-1);
  target=Number(ref?.kg||previous(s,x)?.rows.at(-1)?.kg||0);pair=[];

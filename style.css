@@ -86,3 +86,11 @@ body:has(.current-set) main,body:has(.dock) main{padding-bottom:calc(240px + env
 .current-set .series-actions,.dock{position:fixed;bottom:var(--action-bottom);left:50%;transform:translateX(-50%);width:min(calc(100% - 32px),650px);margin:0;z-index:3;background:var(--bg);border-radius:14px}
 .current-set .series-actions button:active,.dock:active{opacity:.94}
 body:has(.current-set) #clock,body:has(.dock) #clock{bottom:calc(var(--action-bottom) + 58px)}
+
+.calendar{border:1px solid var(--line);border-radius:20px;padding:14px;background:var(--panel);margin:14px 0 8px}
+.month-head{display:flex;align-items:center;justify-content:space-between}.month-head h2{text-transform:capitalize;font-size:26px;margin:0}
+.month-head button{width:44px;font-size:21px}.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;margin-top:14px;text-align:center}
+.days small{padding:4px 0}.day{padding:4px 0;min-height:44px;display:grid;align-content:center;justify-items:center;border:0;border-radius:10px;font-variant-numeric:tabular-nums;background:none}
+.day.today{outline:1px solid var(--red);outline-offset:-2px}.day.selected{background:var(--button);color:white}.day span{height:7px;display:flex;gap:2px;align-items:center}
+.legend{display:flex;gap:10px;flex-wrap:wrap}.legend small{display:flex;align-items:center;gap:4px}.day i,.legend i{width:6px;height:6px;border-radius:50%;background:var(--session-color)}
+.p0{--session-color:#e25c40}.p1{--session-color:#698eca}.p2{--session-color:#71a278}.selected i{outline:1px solid #fff}.event{border-left:4px solid var(--session-color);padding:10px 14px;background:var(--panel);margin:10px 0}.event button+button{margin-left:6px}

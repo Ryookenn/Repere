@@ -24,7 +24,7 @@ function dashboard(){
 }
 function overview(s){
  const total=s.items.reduce((n,x)=>n+x.sets.filter(r=>r.ok).length,0);
- return '<div class="tag">'+esc(state.gyms.find(g=>g.id===s.gym)?.name)+'</div><h1>'+programs[s.plan]+'</h1><p class="sub">'+dateLabel(s.date)+' · '+total+' série'+(total>1?'s':'')+' validée'+(total>1?'s':'')+'</p><div class="exercise-list">'+s.items.map((x,i)=>listRow(x,i,"focus",s.done)).join('')+'</div>'+button('addItem','+ Ajouter un exercice')+'<details><summary>Modifier la date</summary>'+field('Date','<input type="date" data-key="date" value="'+s.date+'" max="'+today()+'">')+'</details>'+button('finish',s.done?'Enregistrer les corrections':'Terminer la séance','','primary wide');
+ return '<div class="tag">'+esc(state.gyms.find(g=>g.id===s.gym)?.name)+'</div><h1>'+programs[s.plan]+'</h1><p class="sub">'+dateLabel(s.date)+' · '+total+' série'+(total>1?'s':'')+' validée'+(total>1?'s':'')+'</p><div class="exercise-list">'+s.items.map((x,i)=>listRow(x,i,"focus",s.done)).join('')+'</div>'+button('addItem','+ Ajouter un exercice')+'<details><summary>Modifier la date</summary>'+field('Date','<input type="date" data-key="date" value="'+s.date+'" max="'+today()+'">')+'</details>'+button('finish',s.done?'Enregistrer les corrections':'Terminer la séance','','primary wide')+(!s.done?button('cancelDraft','Annuler cette séance',s.id,'link'):'');
 }
 function focusedWorkout(s){
  if(!s.items.length)return overview(s);
@@ -41,5 +41,5 @@ function focusedWorkout(s){
  const undo=undoSet?.session===s.id&&undoSet.item===x.id&&undoSet.expires>Date.now()&&undoSet.after===JSON.stringify(x.sets)?button('undo','Série enregistrée · Annuler',i,'link'):'';
  const editor=pending>=0?'<div class="current-set"><small>Série '+(pending+1)+' sur '+Math.max(expected,x.sets.length)+'</small>'+seriesEditor(x,e,i,pending)+'</div>':'';
  const finish=button('endExercise',pending>=0?'Terminer cet exercice':i<s.items.length-1?'Terminer · Exercice suivant →':'Terminer cet exercice →',i,pending>=0?'next wide':'dock primary wide');
- return heading+variant+history+undo+editor+(!s.done?finish:button('overview','Retour au bilan','','next wide'))+(pending<0?button('addSet','+ Ajouter une série',i,'link'):'')+(older?'<details class="log"><summary>Séries de cet exercice ('+(x.sets.length-(pending>=0?1:0))+')</summary>'+older+'</details>':'')+'<details class="options"><summary>Options de l’exercice</summary><div class="row">'+controls+'</div></details>';
+ return heading+variant+history+undo+editor+(!s.done?finish:button('overview','Retour au bilan','','next wide'))+(pending<0?button('addSet','+ Ajouter une série',i,'link'):'')+(older?'<details class="log"><summary>Séries de cet exercice ('+(x.sets.length-(pending>=0?1:0))+')</summary>'+older+'</details>':'')+'<details class="options"><summary>Options de l’exercice</summary><div class="row">'+controls+(!s.done?button('cancelDraft','Annuler la séance',s.id):'')+'</div></details>';
 }
