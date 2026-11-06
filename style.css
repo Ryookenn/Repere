@@ -47,3 +47,34 @@ table{width:100%;border-collapse:collapse}td,th{padding:10px 3px;text-align:left
 .metric{font-size:42px}.bar{display:block;height:5px;background:var(--wash);margin:4px 0 15px}.bar i{display:block;height:100%;background:var(--red)}
 svg{width:100%;height:auto}svg text{font:10px system-ui;fill:var(--muted)}.bad{color:var(--red)}
 [hidden]{display:none!important}:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+
+/* V3 · navigation and training surfaces */
+:root{--tile:#f4e6dc;--tile-ink:#38251e;--graphic-accent:#d52c1e;--soft-red:#fff0e9}
+:root[data-theme="dark"]{--tile:#342925;--tile-ink:#f1ded2;--graphic-accent:#ff705c;--soft-red:#33201d}
+header{padding:12px 18px}.header-actions{display:flex;align-items:center;gap:2px}
+#status{font-size:11px;padding:0 5px}.settings-link{background:none;border:0;font-size:13px;color:var(--ink);padding:0 7px;text-decoration:underline;text-underline-offset:4px}
+button{border-radius:12px;background:var(--panel);font-size:15px;font-weight:600}
+button.primary,.next{min-height:50px;border-radius:14px;font-size:16px;letter-spacing:-.02em}.primary{box-shadow:0 3px 9px #9e190e1a}
+.cover{position:relative;isolation:isolate;overflow:hidden;background:#30221d;color:#fff6e9;border:0;border-radius:24px;padding:25px 22px;margin:14px 0 7px}
+.cover h1{position:relative;max-width:72%;font-size:clamp(36px,8vw,58px);margin:15px 0 8px}
+.cover small,.cover p{color:#efddd2}.cover p{font-size:14px;max-width:68%}.cover .primary{margin-top:15px;background:#ce261b}
+.cover-art{position:absolute;width:clamp(120px,30vw,210px);right:-7px;top:0;color:#eac8aa;z-index:-1;transform:rotate(-5deg);--graphic-accent:#ff795f}
+.exercise-art{width:100%;height:100%;display:block}.exercise-art .equipment{opacity:.58;stroke-width:3}.exercise-art .limb{stroke:var(--graphic-accent)}
+.switcher summary,.options summary,.log summary{font-size:14px}.switcher{margin:3px 0 28px}
+.choice{display:block;width:100%;text-align:left;margin:4px 0}.list-title{font-size:29px;margin:16px 0 8px}
+.exercise-list{margin:0 0 16px}.exercise-row{display:flex;align-items:center;gap:14px;width:100%;padding:11px 0;border:0;border-bottom:1px solid var(--line);background:none;text-align:left;border-radius:0}
+.thumbnail,.portrait{display:inline-grid;place-items:center;background:var(--tile);color:var(--tile-ink);border-radius:14px;flex:none;width:55px;height:55px}
+.line-copy{flex:1;min-width:0}.line-copy b,.line-copy small{display:block}.line-copy small{font-size:12px;margin-top:2px}
+.work-top,.exercise-heading,.stats-picker{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.link{background:none;border:0;color:var(--red);padding:0 2px;text-align:left}.work-top small{text-align:right}
+.progress-track{height:4px;background:var(--wash);border-radius:10px;overflow:hidden;margin:2px 0 18px}.progress-track i{display:block;height:100%;background:var(--red)}
+.exercise-heading{margin-bottom:14px}.exercise-heading h1{font-size:clamp(29px,7vw,46px);margin:0}.exercise-heading .tag{font-size:10px;margin-bottom:5px}.portrait{width:76px;height:76px;border-radius:19px}
+.reference{background:var(--wash);border-radius:14px;padding:10px 14px;margin:10px 0}.reference small,.reference b{display:block}.reference .link{min-height:40px}
+.entry,.after-set{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:16px;margin:14px 0 9px}.after-set small{display:block;margin-bottom:10px}
+.measures{margin:9px 0 16px}.measure input{font-size:clamp(38px,10vw,58px)}.steps{gap:12px}.steps button{background:var(--wash);border:none;font-size:24px}
+.series-actions{margin:0}.series-actions .remove{min-width:44px;background:transparent;color:var(--muted);font-size:21px;border:0}
+.next{background:transparent;color:var(--ink);border:1px solid var(--line)}.log,.options{border-bottom:1px solid var(--line)}
+.stats-picker{justify-content:flex-start;margin-top:13px}.stats-picker label{flex:1}
+.tabs{display:flex;gap:3px;background:var(--wash);padding:4px;border-radius:14px}.tabs button{flex:1;border:0;background:transparent;font-size:13px}.tabs .done{background:var(--panel);color:var(--red)}
+nav button{border-radius:12px;display:grid;place-content:center;justify-items:center;gap:3px}nav svg{width:21px;height:21px}nav .on{background:var(--soft-red)}nav{gap:5px;padding-inline:12px}
+@media(max-width:380px){.brand{font-size:19px}.header-actions{gap:0}#status{max-width:90px}.portrait{width:60px;height:60px}.cover-art{width:112px}}
