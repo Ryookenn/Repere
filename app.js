@@ -19,12 +19,12 @@ const nameInput=(name='name')=>'<input name="'+name+'" maxlength="80" required p
 function nextPlan(){const last=state.sessions.filter(s=>s.done).sort((a,b)=>b.date.localeCompare(a.date)||b.created-a.created)[0];return last?(last.plan+1)%programs.length:0}
 const gymLine=()=>field('Salle active',select('gym',gyms()));
 function newItem(id){return {id:uid(),ex:id,mode:baseMode(exercise(id)),sets:[emptySet()]}}
-function start(idx){if(!state.gyms.length)return;const s={id:uid(),gym,plan:idx,date:today(),created:Date.now(),done:false,items:state.plans[idx].map(newItem)};state.sessions.push(s);active=s.id;page='session';changed();render();scrollTo(0,0)}
+function start(idx,first=0){if(!state.gyms.length)return;const s={id:uid(),gym,plan:idx,date:today(),created:Date.now(),done:false,items:state.plans[idx].map(newItem)};state.sessions.push(s);active=s.id;page='session';if(s.items[first]){s.items[first].started=true;localStorage.setItem('onemore.exercise.'+s.id,s.items[first].id)}changed();render();scrollTo(0,0)}
 const session=()=>state.sessions.find(s=>s.id===active);
 function setText(r,m){return (m==='pdc'?'':fmt(r.kg)+' kg × ')+r.reps+(m==='pdc'?' rép.':'')}
 function previous(s,x){return performances(state,s.gym,x.ex,x.mode).filter(p=>p.s.id!==s.id&&(p.s.date<s.date||(p.s.date===s.date&&p.s.created<s.created))).at(-1)}
 function seriesEditor(x, e, i, j) {
- const r=x.sets[j], id=i+','+j;
+ const r=displayedSet(session(),x,j), id=i+','+j;
  function control(key,title,disabled=false) {
   if(disabled) return '<div class="measure"><strong>Corps</strong><small>poids du corps</small></div>';
   const ref=id+','+key, isKg=key==='kg';
@@ -32,7 +32,7 @@ function seriesEditor(x, e, i, j) {
   return '<div class="measure">'+field(title,input)+'<div class="steps">'+button('minus','<span aria-label="Diminuer '+title+'">−</span>',ref)+button('plus','<span aria-label="Augmenter '+title+'">+</span>',ref)+'</div></div>';
  }
  const fields='<div class="measures">'+control('kg',e.kind==='haltère'?'kg par main':'kg',x.mode==='pdc')+control('reps','répétitions')+'</div>';
- const actions='<div class="series-actions">'+button('check',r.ok?'Décocher la série':'Valider la série',id,'primary')+button('removeSet','<span aria-label="Retirer cette série">×</span>',id,'remove')+'</div>';
+ const actions='<div class="series-actions">'+button('check',r.ok?'Décocher la série':checkLabel(r,x.mode),id,'primary')+button('removeSet','<span aria-label="Retirer cette série">×</span>',id,'remove')+'</div>';
  return r.ok?'<details class="completed"><summary>Série '+(j+1)+' <b>'+setText(r,x.mode)+'</b> ✓</summary>'+fields+actions+'</details>':'<div class="entry"><small>Série '+(j+1)+'</small>'+fields+actions+'</div>';
 }
 function history(){return '<h1>Journal</h1>'+gymLine()+button('retro','+ Saisir une ancienne séance','','primary')+state.sessions.filter(s=>s.gym===gym).sort((a,b)=>b.date.localeCompare(a.date)||b.created-a.created).map(s=>'<section><small>'+dateLabel(s.date)+' · '+(s.done?'Terminée':'En cours')+'</small><h2>'+programs[s.plan]+'</h2>'+button('open','Ouvrir',s.id)+'</section>').join('')}
@@ -68,12 +68,12 @@ function stats(){
  const trend=delta===null?'':'<p class="sub">'+(delta>0?'+':'')+fmt(delta)+unit+' depuis le '+dateLabel(pts[0].d)+'</p>';
  return out+'<section>'+field('Indicateur',select('metric',allowed.map(k=>option(k,mode==='pdc'?'Répétitions au poids du corps':metrics[k],metric)).join('')))+(mode!=='pdc'&&metric!=='rm'?field(metric==='load'?'Minimum de répétitions':'Charge en kg','<input data-key="target" type="number" min="'+(metric==='load'?1:0)+'" step="'+(metric==='load'?1:'any')+'" value="'+target+'">'):'')+'<div class="metric">'+(pts.length?fmt(pts.at(-1).v)+unit:'—')+'</div>'+trend+plot(pts)+'</section><section><div class="tag">Records personnels · salle active</div><h2>'+esc(ex.name)+'</h2>'+(rows.length?'<p>Meilleure série en répétitions <b>'+setText(rows.reduce((a,b)=>+a.reps>=+b.reps?a:b),mode)+'</b></p>'+(mode==='pdc'?'':'<p>'+(mode==='aide'?'Assistance minimale':'Charge maximale')+' <b>'+fmt(best(rows,'load',1,mode))+' kg</b></p>'):'<p>Valide ta première série pour établir un record.</p>')+(mode==='charge'?'<p>Meilleur 1RM estimé <b>'+(rm===null?'—':fmt(rm)+' kg')+'</b></p><small>Epley · séries de 1 à 10 répétitions. Pour les haltères, valeur par main.</small>':'')+'</section>'
 }
-function settings(){return '<h1>Réglages</h1><section><h2>Apparence</h2>'+field('Thème de l’application',select('appearance',Object.entries(appearance.choices).map(([key,label])=>option(key,label,appearance.value)).join('')))+'</section><section><h2>Mes salles</h2>'+state.gyms.map(g=>'<p>'+esc(g.name)+'</p>').join('')+button('gym','+ Ajouter une salle')+'</section><details class="settings-group"><summary>Modifier mon programme</summary>'+select('plan',programs.map((n,i)=>option(i,n,plan)).join(''))+state.plans[plan].map((id,i)=>'<div class="row spread"><span>'+esc(exercise(id).name)+'</span><div>'+button('planUp','↑',i)+button('planDown','↓',i)+button('planRemove','−',i)+'</div></div>').join('')+button('planAdd','+ Exercice au programme')+' '+button('custom','Créer un exercice')+'</details><section><h2>Repos entre séries</h2>'+field('Durée en secondes · 0 pour désactiver','<input data-key="rest" type="number" min="0" max="3600" value="'+state.rest+'">')+'</section><section><h2>Synchronisation</h2><p>'+(!configured?'Mode local. Renseigne config.js pour activer Supabase.':token?'Compte connecté.':'Connecte ton compte Supabase pour sauvegarder ton carnet.')+'</p>'+(cloudError?'<p class="bad">'+esc(cloudError)+'</p>':'')+(conflict?'<p>Une autre version existe en ligne. Exporte ta copie locale avant de charger la version en ligne.</p>'+button('export','Exporter ma copie')+' '+button('resolve','Charger la version en ligne'):'')+(configured?button('login',token?'Renouveler la connexion':'Me connecter')+' '+(token?button('sync','Synchroniser'):''):'')+'</section>'}
+function settings(){return '<h1>Réglages</h1><section><h2>Apparence</h2>'+field('Thème de l’application',select('appearance',Object.entries(appearance.choices).map(([key,label])=>option(key,label,appearance.value)).join('')))+'</section><section><h2>Mes salles</h2>'+state.gyms.map(g=>'<p>'+esc(g.name)+'</p>').join('')+button('gym','+ Ajouter une salle')+'</section><details class="settings-group"><summary>Modifier mon programme</summary>'+select('plan',programs.map((n,i)=>option(i,n,plan)).join(''))+state.plans[plan].map((id,i)=>'<div class="row spread"><span>'+esc(exercise(id).name)+'</span><div>'+button('planUp','↑',i)+button('planDown','↓',i)+button('planRemove','−',i)+'</div></div>').join('')+button('planAdd','+ Exercice au programme')+' '+button('custom','Créer un exercice')+'</details><section><h2>Repos entre séries</h2>'+field('Durée en secondes · 0 pour désactiver','<input data-key="rest" type="number" min="0" max="3600" value="'+state.rest+'">')+'</section><section><h2>Synchronisation</h2><p>'+(!configured?'Mode local. Renseigne config.js pour activer Supabase.':token?'Compte · '+esc(token.user.email)+'<br>Dernière synchronisation réussie · '+esc(lastSyncLabel()):'Connecte ton compte Supabase pour sauvegarder ton carnet.')+'</p>'+(cloudError?'<p class="bad">'+esc(cloudError)+'</p>':'')+(conflict?'<p>Une autre version existe en ligne. Exporte ta copie locale avant de charger la version en ligne.</p>'+button('export','Exporter ma copie')+' '+button('resolve','Charger la version en ligne'):'')+(configured?button('login',token?'Renouveler la connexion':'Me connecter')+' '+(token?button('sync','Synchroniser'):''):'')+'</section>'}
 function render(){
  if(!state.gyms.some(g=>g.id===gym))gym=state.gyms[0]?.id||'';
  if(['session','overview'].includes(page)&&!session())page='home';
  $('nav').innerHTML=navs.map(([id,icon,n])=>button('nav',navGlyph(id)+n,id,(page===id||(id==='home'&&['session','overview'].includes(page)))?'on':'')).join('');
- $('#app').innerHTML=page==='home'?dashboard():page==='settings'?settings():page==='session'?focusedWorkout(session()):page==='overview'?overview(session()):!gym?dashboard():page==='stats'?stats():history();statusText()
+ $('#app').innerHTML=page==='home'?(configured&&!token&&!localStorage.getItem('onemore.local')?onboarding():dashboard()):page==='settings'?settings():page==='session'?focusedWorkout(session()):page==='overview'?overview(session()):!gym?dashboard():page==='stats'?(returnFromProgress?button('backWorkout','‹ Revenir à mon exercice','','link'):'')+stats():history();statusText()
 }
 function askExercise(cb){modal('Choisir un exercice',field('Exercice','<select name="ex">'+exOptions('')+'</select>'),v=>{cb(v.ex);changed();render()})}
 function swap(list,i,d){if(i+d>=0&&i+d<list.length)[list[i],list[i+d]]=[list[i+d],list[i]]}
@@ -82,11 +82,27 @@ document.addEventListener('click',e=>{
  const b=e.target.closest('[data-act]');if(!b)return;
  const a=b.dataset.act,id=b.dataset.id||'',[i,j]=id.split(',').map(Number),s=session(),x=s?.items[i];
  if(a==='cancel')return $('dialog').close();
- if(a==='settings'||a==='nav'){page=a==='settings'?'settings':id;render();scrollTo(0,0);return}
+ if(a==='settings'||a==='nav'){returnFromProgress=null;page=a==='settings'?'settings':id;render();scrollTo(0,0);return}
  if(a==='gym')return modal('Ajouter une salle',field('Nom de la salle',nameInput()),v=>{const name=v.name.trim();if(!name||state.gyms.some(g=>g.name.toLowerCase()===name.toLowerCase()))return alert('Choisis un nom de salle distinct.');gym=uid();state.gyms.push({id:gym,name});localStorage.setItem('repere.gym',gym);changed();render()});
  if(a==='custom')return modal('Créer un exercice',field('Nom',nameInput())+field('Groupe musculaire principal',nameInput('muscle'))+field('Type','<select name="kind">'+kinds.map(k=>option(k,k==='pdc'?'Poids du corps':k,'machine')).join('')+'</select>'),v=>{state.ex.push({id:uid(),name:v.name.trim(),muscle:v.muscle.trim(),kind:v.kind});changed();render()});
  if(a==='start')return start(+id);
  if(a==='retro')return modal('Ajouter une séance passée',field('Date','<input type="date" name="date" required max="'+today()+'" value="'+today()+'">')+field('Séance','<select name="plan">'+programs.map((n,i)=>option(i,n,0)).join('')+'</select>'),v=>{start(+v.plan);session().date=v.date;changed();render()});
+ if(a==='local'){localStorage.setItem('onemore.local','1');render();return}
+ if(a==='homeItem'){
+  const draft=state.sessions.filter(t=>t.gym===gym&&!t.done).sort((a,b)=>b.created-a.created)[0];
+  if(draft)active=draft.id;else start(nextPlan(),i);
+  return focusItem(session(),i);
+ }
+ if(a==='endExercise')return finishExercise(s,x,i);
+ if(a==='undo')return restoreValidation(s,x);
+ if(a==='chart')return openProgress(s,x);
+ if(a==='backWorkout'){
+  const back=returnFromProgress;returnFromProgress=null;active=back.session;gym=back.gym;
+  return focusItem(session(),Math.max(0,session().items.findIndex(item=>item.id===back.item)));
+ }
+ if(a==='stepSize')return modal('Pas de charge dans cette salle',field('Incrément en kg','<input name="step" type="number" min="0.01" max="100" step="0.01" required value="'+loadStep(s,x)+'">'),v=>{
+  const e=exercise(x.ex);e.steps??={};e.steps[s.gym]=+v.step;changed();render()
+ });
  if(a==='focus')return focusItem(s,i);
  if(a==='overview'){page='overview';render();scrollTo(0,0);return}
  if(a==='nextItem'){if(i+1<s.items.length)return focusItem(s,i+1);page='overview';render();scrollTo(0,0);return}
@@ -105,14 +121,14 @@ document.addEventListener('click',e=>{
  if(a==='planRemove')state.plans[plan].splice(i,1);
  if(a==='skip'&&eraseOK(x)){s.items.splice(i,1);if(s.items.length)localStorage.setItem('onemore.exercise.'+s.id,s.items[Math.min(i,s.items.length-1)].id)}
  if(a==='restEx')return modal('Repos pour cet exercice',field('Durée en secondes · 0 pour désactiver','<input type="number" name="seconds" required min="0" max="3600" value="'+(exercise(x.ex).rest??state.rest)+'">'),v=>{exercise(x.ex).rest=+v.seconds;changed();render()});
- if(a==='addSet'){const last=x.sets.at(-1);x.sets.push({...emptySet(),kg:last?.kg??'',reps:last?.reps??''})}
+ if(a==='addSet'){x.finished=false;const last=x.sets.at(-1);x.sets.push({...emptySet(),kg:last?.kg??'',reps:last?.reps??''})}
  if(a==='removeSet'&&(!x.sets[j].ok||confirm('Retirer cette série validée ?')))x.sets.splice(j,1);
  if(a==='copy'&&eraseOK(x))x.sets=previous(s,x).rows.map(r=>({...r,ok:false}));
  if(a==='plus'||a==='minus'){
- const key=id.split(',')[2],r=x.sets[j],step=key==='reps'?1:0.5;
- r[key]=Math.max(key==='reps'?1:0,Number(r[key]||0)+(a==='plus'?step:-step));r.ok=false;
+ const key=id.split(',')[2],r=materialize(s,x,j),step=key==='reps'?1:loadStep(s,x);
+ r[key]=Math.max(key==='reps'?1:0,Number((Number(r[key]||0)+(a==='plus'?step:-step)).toFixed(2)));r.ok=false;
  }
- if(a==='check'){const r=x.sets[j];if(!valid(r,x.mode))return alert(x.mode==='pdc'?'Indique ton nombre de répétitions.':'Indique ta charge et ton nombre de répétitions.');r.ok=!r.ok;const seconds=exercise(x.ex).rest??state.rest;if(r.ok&&!s.done&&s.date===today()&&seconds){localStorage.setItem('repere.timer',Date.now()+seconds*1000);tick()}}
+ if(a==='check'&&!validateRow(s,x,i,j))return;
  if(a==='finish'){
  const all=s.items.flatMap(x=>x.sets);
  if(!all.some(r=>r.ok))return alert('Valide au moins une série avec ✓.');
@@ -121,7 +137,7 @@ document.addEventListener('click',e=>{
  }
  changed();render()
 });
-document.addEventListener('input',e=>{const input=e.target;if(!input.dataset.input)return;const [i,j,k]=input.dataset.input.split(',');const r=session().items[i].sets[j];r[k]=input.value;r.ok=false;const panel=input.closest('.completed');if(panel){panel.querySelector('summary').textContent='Série '+(+j+1)+' · à valider';panel.querySelector('[data-act="check"]').textContent='Valider la série'}changed()});
+document.addEventListener('input',e=>{const input=e.target;if(!input.dataset.input)return;const [i,j,k]=input.dataset.input.split(',');const x=session().items[i],r=materialize(session(),x,+j);r[k]=input.value;r.ok=false;const check=input.closest('.entry')?.querySelector('[data-act="check"]');if(check)check.textContent=checkLabel(r,x.mode);const panel=input.closest('.completed');if(panel){panel.querySelector('summary').textContent='Série '+(+j+1)+' · à valider';panel.querySelector('[data-act="check"]').textContent='Valider la série'}changed()});
 document.addEventListener('change',e=>{
  const key=e.target.dataset.key,v=e.target.value;if(!key)return;
  if(key==='appearance')appearance.set(v);
@@ -129,14 +145,14 @@ document.addEventListener('change',e=>{
  if(key==='plan')plan=+v;
  if(key==='rest'){if(v===''||!Number.isInteger(+v)||+v<0||+v>3600)return render();state.rest=+v;changed()}
  if(key==='date'){if(!v||v>today())return render();session().date=v;changed()}
- if(key.startsWith('mode:')){const x=session().items[+key.split(':')[1]];if(eraseOK(x)){x.mode=v;x.sets=[emptySet()];changed()}}
+ if(key.startsWith('mode:')){const x=session().items[+key.split(':')[1]];if(eraseOK(x)){x.mode=v;x.finished=false;x.sets=[emptySet()];changed()}}
  if(key==='statEx'||key==='statMode'){if(key==='statEx')statEx=v;mode=key==='statMode'?v:baseMode(exercise(statEx));metric=mode==='pdc'?'reps':'load';target=metric==='load'?8:0;pair=[]}
  if(key==='metric'){metric=v;target=metric==='load'?8:0}
  if(key==='target')target=Math.max(metric==='load'?1:0,+v||0);
  if(key==='A'||key==='B')pair[key==='A'?0:1]=v;
  render()
 });
-function tick(){const end=Number(localStorage.getItem('repere.timer'));const el=$('#clock');el.hidden=!end;if(end){const left=Math.max(0,Math.ceil((end-Date.now())/1000));el.innerHTML='<b>'+(left?'Repos · '+Math.floor(left/60)+':'+String(left%60).padStart(2,'0'):'Repos terminé')+'</b> '+button('stop','Fermer')}}
+function tick(){const end=Number(localStorage.getItem('repere.timer'));const el=$('#clock');const undo=document.querySelector('[data-act="undo"]');if(undo&&(!undoSet||Date.now()>undoSet.expires))undo.hidden=true;el.hidden=!end;if(end){const left=Math.max(0,Math.ceil((end-Date.now())/1000));el.innerHTML='<b>'+(left?'Repos · '+Math.floor(left/60)+':'+String(left%60).padStart(2,'0'):'Repos terminé')+'</b> '+button('stop','Fermer')}}
 setInterval(tick,1000);tick();render();sync();
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){tick();sync()}});
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(console.error);

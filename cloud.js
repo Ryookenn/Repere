@@ -6,6 +6,7 @@ let box=JSON.parse(localStorage.getItem(storageKey)||'null')||{state:seed(),rev:
 let state=box.state, token=JSON.parse(localStorage.getItem('repere.auth')||'null');
 let busy=false, conflict=false, cloudError='', job;
 function persist(){localStorage.setItem(storageKey,JSON.stringify(box))}
+function synced(){box.lastSync=Date.now();persist()}
 function changed(){box.dirty=true;persist();queueSync();statusText()}
 function queueSync(){clearTimeout(job);job=setTimeout(sync,800)}
 function keepToken(t){token=t;if(t)localStorage.setItem('repere.auth',JSON.stringify(t));else localStorage.removeItem('repere.auth')}
@@ -28,15 +29,15 @@ async function sync(resolve=false){
  const [remote]=await call(path+filter+'&select=carnet,revision',{},jwt);
  if(remote&&(resolve||remote.revision!==box.rev)){
   if(box.dirty&&!resolve){conflict=true;return}
-  box.state=remote.carnet;state=box.state;box.rev=remote.revision;box.dirty=false;conflict=false;persist();render();return;
+  box.state=remote.carnet;state=box.state;box.rev=remote.revision;box.dirty=false;conflict=false;synced();render();return;
  }
- if(!box.dirty&&remote)return;
+ if(!box.dirty&&remote){synced();return}
  const snapshot=JSON.stringify(state),rev=box.rev+1;
  const data={carnet:JSON.parse(snapshot),revision:rev};
  if(!remote)data.owner_id=token.user.id;
  const result=await call(remote?path+filter+'&revision=eq.'+box.rev:path,{method:remote?'PATCH':'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(data)},jwt);
  if(!result?.length){conflict=true;return}
- box.rev=rev;box.dirty=JSON.stringify(state)!==snapshot;persist();if(box.dirty)queueSync();
+ box.rev=rev;box.dirty=JSON.stringify(state)!==snapshot;synced();if(box.dirty)queueSync();
  }catch(e){if(e.status===409)conflict=true;else cloudError=e.message}finally{busy=false;statusText();if(page==='settings')render()}
 }
 window.addEventListener('online',()=>sync());window.addEventListener('offline',()=>statusText());

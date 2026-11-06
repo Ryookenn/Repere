@@ -78,3 +78,11 @@ button.primary,.next{min-height:50px;border-radius:14px;font-size:16px;letter-sp
 .tabs{display:flex;gap:3px;background:var(--wash);padding:4px;border-radius:14px}.tabs button{flex:1;border:0;background:transparent;font-size:13px}.tabs .done{background:var(--panel);color:var(--red)}
 nav button{border-radius:12px;display:grid;place-content:center;justify-items:center;gap:3px}nav svg{width:21px;height:21px}nav .on{background:var(--soft-red)}nav{gap:5px;padding-inline:12px}
 @media(max-width:380px){.brand{font-size:19px}.header-actions{gap:0}#status{max-width:90px}.portrait{width:60px;height:60px}.cover-art{width:112px}}
+
+/* Thumb-reachable action. Reserve the same space below the form and above the tabs. */
+body:has(.current-set),body:has(.dock){--action-bottom:calc(72px + env(safe-area-inset-bottom))}
+body:has(.current-set) main,body:has(.dock) main{padding-bottom:calc(240px + env(safe-area-inset-bottom))}
+.current-set .entry>small{display:none}
+.current-set .series-actions,.dock{position:fixed;bottom:var(--action-bottom);left:50%;transform:translateX(-50%);width:min(calc(100% - 32px),650px);margin:0;z-index:3;background:var(--bg);border-radius:14px}
+.current-set .series-actions button:active,.dock:active{opacity:.94}
+body:has(.current-set) #clock,body:has(.dock) #clock{bottom:calc(var(--action-bottom) + 58px)}
