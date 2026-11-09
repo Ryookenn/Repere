@@ -134,3 +134,32 @@ body:has(.current-set) #clock,body:has(.dock) #clock{bottom:calc(var(--action-bo
 @keyframes encore-rise{from{transform:translateY(8px) scale(.94);opacity:0}}
 @keyframes encore-draw{from{stroke-dashoffset:90}}
 @media(prefers-reduced-motion:reduce){.encore,.encore *{animation:none!important;transition:none!important}}
+
+.measure input,.measure strong,.metric,#clock{font-family:system-ui,sans-serif;font-variant-numeric:tabular-nums;font-weight:650}
+.steps{display:flex;justify-content:center;gap:6px}
+.steps button{min-width:48px;min-height:48px;background:var(--wash);border:0;border-radius:15px;color:var(--ink)}
+.steps button:active{transform:scale(.93)}
+.current-set{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:16px}
+.current-set .primary,.dock.primary{border-radius:17px;min-height:52px;font-weight:700}
+#workSheet{inset:auto 0 0;margin:0 auto;border:0;border-radius:26px 26px 0 0;width:min(100%,520px);background:var(--panel);color:var(--ink);padding:22px 20px max(20px,env(safe-area-inset-bottom));box-sizing:border-box;max-height:85dvh}
+#workSheet::backdrop{background:#100e0c94}
+.sheet-actions{display:grid;gap:6px}
+.sheet-actions button{text-align:left;background:var(--wash);border:0;padding:12px 16px}
+.week-panel{grid-column:1/-1;margin:8px 0;padding:15px;background:var(--wash);border-radius:16px}
+.curve-head,.point-readout{display:grid;gap:4px;margin:15px 0 4px}
+.curve-head b{font-size:1.2rem}
+.scrub{touch-action:pan-y}
+.encore-set,.encore-rest,.encore-move{background:rgba(12,12,12,.66)}
+.encore-card .finish-mark svg{width:124px;overflow:visible}
+.encore-card .finish-mark .upright{animation:bar-arrive .24s calc(var(--i)*70ms) backwards}
+.encore-card .finish-mark .slash{animation:slash-arrive .50s .55s linear both}
+.has-record small{font-size:20px;animation:record-in .32s 1.6s both}
+.has-record .finish-mark{animation:record-out .25s 1.4s forwards}
+@keyframes bar-arrive{from{opacity:0;transform:translateY(7px)}}
+@keyframes slash-arrive{from{clip-path:inset(-2% 100% -2% 0)}to{clip-path:inset(-2% 0 -2% 0)}}
+@keyframes record-in{from{opacity:0;transform:translateY(7px)}}
+@keyframes record-out{to{opacity:0}}
+@media(prefers-reduced-motion:reduce){.encore-card *{animation:none!important}}
+#workSheet[open]{animation:sheet-in .24s cubic-bezier(.2,.75,.25,1)}
+@keyframes sheet-in{from{opacity:.2;transform:translateY(36px)}}
+@media(prefers-reduced-motion:reduce){#workSheet[open]{animation:none}}

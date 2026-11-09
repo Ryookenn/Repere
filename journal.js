@@ -10,11 +10,13 @@ function history(){
  const date=atNoon(journalDay),month=journalDay.slice(0,7),first=atNoon(month+'-01');
  const entries=[...state.sessions,...(state.agenda||[])].filter(s=>journalGym==='all'||s.gym===journalGym);
  const days=new Date(date.getFullYear(),date.getMonth()+1,0).getDate();
+ let weekEnd=0;
  let cells='<span></span>'.repeat((first.getDay()+6)%7);
  for(let n=1;n<=days;n++){
   const day=month+'-'+String(n).padStart(2,'0'), matches=entries.filter(s=>s.date===day);
   const markers=matches.map(s=>'<i class="p'+s.plan+' '+statusIcon(s)+(s.id===movedNotice?' moved-mark':'')+'"></i>').join('');
   cells+='<button type="button" data-act="day" data-id="'+day+'" aria-pressed="'+(day===journalDay)+'" aria-label="'+dateLabel(day)+' · '+esc(matches.map(s=>programs[s.plan]+' '+statusName(s)).join(', '))+'" class="day '+(day===today()?'today ':'')+(day===journalDay?'selected':'')+'">'+n+'<span>'+markers+'</span></button>';
+  if(n===Math.min(days,date.getDate()+6-(date.getDay()+6)%7))weekEnd=cells.length;
  }
  const selected=entries.filter(s=>s.date===journalDay);
  const agenda=selected.map(s=>{
@@ -24,7 +26,7 @@ function history(){
  }).join('');
  const moving=state.agenda?.find(t=>t.id===movingPlan);
  const prompt=moving?'<div class="move-hint"><b>Déplacer · '+programs[moving.plan]+'</b><p>Touche le nouveau jour dans le calendrier.</p>'+button('stopMove','Annuler')+'</div>':'';
- return '<h1>Journal</h1>'+prompt+field('Salles affichées',gymFilter('journalGym',journalGym))+'<section class="calendar"><div class="month-head">'+button('month','‹',-1)+'<h2>'+date.toLocaleDateString('fr-FR',{month:'long',year:'numeric'})+'</h2>'+button('month','›',1)+'</div><div class="days">'+['L','M','M','J','V','S','D'].map(n=>'<small>'+n+'</small>').join('')+cells+'</div>'+button('day','Aujourd’hui',today(),'link')+'</section><div class="legend">'+programs.map((n,i)=>'<small><i class="p'+i+'"></i>'+n+'</small>').join('')+'</div><div class="legend states"><small><i class="planned"></i>Prévue</small><small><i class="ongoing"></i>En cours</small><small><i class="complete"></i>Terminée</small></div><section><h2>'+dateLabel(journalDay)+'</h2>'+ (agenda||'<p class="sub">Aucune séance ce jour.</p>')+(journalDay<=today()?button('retro','+ Saisir une séance'):'')+(journalDay>=today()?button('schedule','Planifier une séance','','primary'):'')+'</section>';
+ return '<h1>Journal</h1>'+prompt+field('Salles affichées',gymFilter('journalGym',journalGym))+'<section class="calendar"><div class="month-head">'+button('month','‹',-1)+'<h2>'+date.toLocaleDateString('fr-FR',{month:'long',year:'numeric'})+'</h2>'+button('month','›',1)+'</div><div class="days">'+['L','M','M','J','V','S','D'].map(n=>'<small>'+n+'</small>').join('')+cells.slice(0,weekEnd)+'<section class="week-panel"><h2>'+dateLabel(journalDay)+'</h2>'+ (agenda||'<p class="sub">Aucune séance ce jour.</p>')+(journalDay<=today()?button('retro','+ Saisir une séance'):'')+(journalDay>=today()?button('schedule','Planifier une séance','','primary'):'')+'</section>'+cells.slice(weekEnd)+'</div>'+button('day','Aujourd’hui',today(),'link')+'</section><div class="legend">'+programs.map((n,i)=>'<small><i class="p'+i+'"></i>'+n+'</small>').join('')+'</div><div class="legend states"><small><i class="planned"></i>Prévue</small><small><i class="ongoing"></i>En cours</small><small><i class="complete"></i>Terminée</small></div>';
 }
 function chooseSession(title,day,fn,allowDate=false){
  modal(title,(allowDate?field('Date','<input type="date" name="date" required value="'+day+'" max="'+today()+'">'):'')+field('Salle','<select name="gym">'+state.gyms.map(g=>option(g.id,g.name,journalGym==='all'?gym:journalGym)).join('')+'</select>')+field('Programme','<select name="plan">'+programs.map((n,i)=>option(i,n,nextPlan())).join('')+'</select>'),v=>fn({id:uid(),date:v.date||day,gym:v.gym,plan:Number(v.plan)}));

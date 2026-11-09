@@ -48,7 +48,7 @@ function render(){
  $('nav').innerHTML=navs.map(([id,icon,n])=>button('nav',navGlyph(id)+n,id,(page===id||(id==='history'&&page==='report')||(id==='home'&&['session','overview'].includes(page)))?'on':'')).join('');
  $('#app').innerHTML=page==='home'?(configured&&!token&&!localStorage.getItem('onemore.local')?onboarding():dashboard()):page==='settings'?settings():page==='session'?focusedWorkout(session()):page==='report'?sessionReport(session()):page==='overview'?overview(session()):!gym?dashboard():page==='stats'?(returnFromProgress?button('backWorkout','‹ Revenir à mon exercice','','link'):'')+stats():history();statusText();
  if(finishNotice)showCelebration('finish',$('#app .record-badge')?.parentElement);
- else if(movedNotice)showCelebration('move');
+ else if(movedNotice){animateMove();showCelebration('move')}
  else if(setNotice)showCelebration('set');
  finishNotice='';movedNotice='';setNotice=false;
 }
@@ -70,11 +70,13 @@ document.addEventListener('click',e=>{
  if(a==='editReport'&&s?.done){page='overview';render();scrollTo(0,0);return}
  if(a==='reportJournal'&&s){journalDay=s.date;journalGym=s.gym;page='history';render();scrollTo(0,0);return}
  if(a==='pin')return pinToggle();
+ if(a==='workOptions'){document.querySelector('#workSheet').showModal();return}
+ if(a==='closeSheet')return;
  if(a==='movePlan'){movingPlan=id;render();scrollTo(0,0);return}
  if(a==='stopMove'){movingPlan='';render();return}
  if(a==='day'&&movingPlan){
   const entry=state.agenda?.find(t=>t.id===movingPlan);
-  if(entry){if(entry.date!==id)movedNotice=entry.id;entry.date=id;changed()}movingPlan='';journalDay=id;render();return
+  if(entry){if(entry.date!==id){movedNotice=entry.id;moveFrom=document.querySelector('.day[data-id="'+entry.date+'"] span i')?.getBoundingClientRect()}entry.date=id;changed()}movingPlan='';journalDay=id;render();return
  }
  if(a==='cancelDraft')return cancelDraft(state.sessions.find(t=>t.id===id));
  if(a==='month'||a==='day'){journalDay=a==='month'?monthShift(journalDay,+id):id;render();return}
@@ -131,7 +133,8 @@ document.addEventListener('click',e=>{
  if(!s.done)finishNotice=s.id;
  s.items.forEach(x=>x.sets=x.sets.filter(r=>r.ok));s.items=s.items.filter(x=>x.sets.length);s.done=true;journalDay=s.date;journalGym=s.gym;page='report';localStorage.removeItem('repere.timer');tick();scrollTo(0,0)
  }
- changed();render()
+ changed();render();
+ if((a==="plus"||a==="minus")&&!reduceMotion())document.querySelector('[data-input="'+id+'"]')?.animate([{opacity:.45,transform:"translateY(2px)"},{opacity:1,transform:"none"}],150)
 });
 document.addEventListener('input',e=>{const input=e.target;if(!input.dataset.input)return;const [i,j,k]=input.dataset.input.split(',');const x=session().items[i],r=materialize(session(),x,+j);r[k]=input.value;r.ok=false;const check=input.closest('.entry')?.querySelector('[data-act="check"]');if(check)check.textContent=checkLabel(r,x.mode);const panel=input.closest('.completed');if(panel){panel.querySelector('summary').textContent='Série '+(+j+1)+' · à valider';panel.querySelector('[data-act="check"]').textContent='Valider la série'}changed()});
 document.addEventListener('change',e=>{
