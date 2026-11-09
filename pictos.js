@@ -1,26 +1,23 @@
-// Side and front views. Coordinates share the same 80 × 80 optical grid.
-// Each pose separates the apparatus, the body and the working limb.
-const poses = [
- [[40,27],'M13 10H67','M40 37V51L33 63L40 68 M40 51L47 63L42 68','M39 37L25 29L21 12 M41 37L55 29L59 12'],
- [[34,24],'M12 56H44 M17 57V68 M69 19V59 M69 42L51 41','M34 34L31 51L48 51L59 61L65 56','M34 36L41 45L52 41'],
- [[34,16],'M64 38V66H56 M64 62L47 31','M34 27L33 47L29 66 M33 47L39 66','M35 29L38 43L47 31 M43 28L51 33'],
- [[30,16],'M62 42V66H53 M60 62L43 36 M41 35L47 40','M30 27L31 47L27 67 M31 47L37 67','M31 29L34 43L43 36L43 27'],
- [[40,22],'M8 32V40 M15 32V40 M65 32V40 M72 32V40','M40 32V51L33 67 M40 51L47 67','M39 33L25 35L12 36 M41 33L55 35L68 36'],
- [[39,20],'M19 14V45 M61 14V45 M30 54H49 M39 55V68','M39 32V49L29 55V65 M39 49L49 55V65','M38 32L22 31L31 25 M41 32L57 31L48 25'],
- [[34,19],'M63 65V9H54 M55 10L47 50 M42 50H53','M34 29L31 47L27 66 M31 47L38 66','M35 30L41 39L47 50'],
- [[40,19],'M66 64V48 M66 59L50 15','M39 30L38 48L32 67 M38 48L45 67','M40 31L53 23L48 11 M48 11L43 9'],
- [[39,23],'M19 10H29 M50 10H60 M26 50H51 M38 51V66','M39 34V48L27 54V65 M39 48L51 55V65','M38 33L24 30V12 M40 33L55 30V12'],
- [[40,21],'M13 21V44 M67 21V44 M29 54H50 M39 55V68','M40 33V49L31 55V66 M40 49L49 55V66','M38 34L25 30L13 25 M42 34L55 30L67 25'],
- [[38,23],'M14 65V10 M65 65V10 M14 32H65','M38 33L31 46L48 49L37 64H48','M38 35L48 37L48 30'],
- [[37,17],'M8 48H23 M12 49V65 M20 49V65 M45 48V57','M37 27L35 42L49 47L47 65H56 M35 42L27 54L18 47','M38 28L42 39L45 50'],
- [[19,33],'M7 43H26 M12 44V63 M44 28V41 M40 31V39','M26 39L43 39L58 39L61 58H69','M25 39L32 45L44 37'],
- [[46,23],'M68 14V65 M15 46L65 62','M43 33L33 43L39 56L37 67 M33 43L24 44L13 37','M44 33L54 40L65 32'],
- [[49,25],'M15 60L39 44 M23 61L41 43 M12 63H47','M43 33L33 45L18 53L13 59','M43 33L46 42L37 36']
+const apparatus = [
+ 'M6 20l7-7h38l7 7 M16 15l-6 7m38-7 6 7 M25 13V7h14v6',
+ 'M6 43h20v5H6z M10 48v6m12-6v6 M29 44l9-12 5 3-9 12z M48 11h9v43h-9z M48 32H34l-6-4',
+ 'M48 10h8v42h-8z M48 47L30 29 M14 21l6 5h15l6-5 M26 26l4 3',
+ 'M47 10h8v43h-8z M47 47L30 25 M30 25l-9 13m9-13 5 15 M18 37l6 4m8-1 6-2',
+ 'M9 24h5v16H9z M15 20h7v24h-7z M22 29h20v6H22z M42 20h7v24h-7z M50 24h5v16h-5z',
+ 'M23 40h18v5H23z M32 45v9 M11 14v15l10 7m32-22v15l-10 7 M8 15h6v12H8z M50 15h6v12h-6z',
+ 'M46 51V11H30v5 M30 16v17 M16 40l14-7 14 7 M13 39l5 4m24-4 5 1',
+ 'M48 51V11H34 M34 11L19 28 M19 28l3 12m-3-12-8 10 M9 38l4 3m7-1 5-1',
+ 'M15 16v13l10 8m24-21v13l-10 8 M10 16h11m22 0h11 M26 42h12v5H26z M32 47v7',
+ 'M11 31l5-14 15 9m22 5-5-14-15 9 M9 31v8m46-8v8 M25 43h14v5H25z M32 48v6',
+ 'M13 9h4v44h-4z M47 9h4v44h-4z M7 25h50 M20 21h4v8h-4z M40 21h4v8h-4z M8 54h15m18 0h15',
+ 'M6 31h29v5H6z M10 36l-3 15m23-15 4 15 M39 39h5v13h-5z M45 44h6m1-5h5v13h-5z',
+ 'M6 26h23v6H6z M10 32v17m14-17v17 M34 31h6v16h-6z M40 37h11m0-6h6v16h-6z',
+ 'M48 11h8v42h-8z M48 48l-21-8 M11 33l16 3-2 12-16-3z M13 38l10 2',
+ 'M9 48l30-25 4 5-30 25z M33 21l10-8 6 7-10 8z M24 40l9 12 M8 54h36 M11 43l-4-5'
 ];
-function exerciseArt(id) {
- const p=poses[id];
- const body=p?'<path class="equipment" d="'+p[1]+'"/><path d="'+p[2]+'"/><circle cx="'+p[0][0]+'" cy="'+p[0][1]+'" r="5.5" fill="currentColor" stroke="none"/><path class="limb" d="'+p[3]+'"/>':'<path d="M19 47L47 19 M24 55L55 24 M14 40L32 58 M39 14L58 33"/>';
- return '<svg class="exercise-art" aria-hidden="true" viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="4.8" stroke-linecap="round" stroke-linejoin="round">'+body+'</svg>';
+function exerciseArt(id){
+ const path=apparatus[id]||'M13 27h7v14h-7z M20 32h24m0-5h7v14h-7z';
+ return '<svg class="exercise-art" aria-hidden="true" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="'+path+'"/></svg>';
 }
 const glyphs={home:'M3 10l9-7 9 7v10h-6v-7H9v7H3z',stats:'M3 19h18M4 15l5-5 4 2 7-8',history:'M5 4h12a2 2 0 0 1 2 2v15H6a2 2 0 0 1-2-2V5 M8 4v16M11 9h5M11 13h4',settings:'M4 7h9m4 0h3M4 17h3m4 0h9 M13 4v6M7 14v6'};
 function navGlyph(id){return '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="'+glyphs[id]+'"/></svg>'}

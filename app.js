@@ -13,8 +13,8 @@ const exOptions=(id)=>state.ex.map(e=>option(e.id,e.name,id)).join('');
 let page='home',gym=localStorage.getItem('repere.gym'),active='',plan=0,statEx='0',mode='pdc',metric='reps',target=0,pair=[],statsTab='progress',dialogSubmit;
 const navs=[['home','','Séance'],['stats','↗','Progrès'],['history','◷','Journal']];
 function statusText(){const el=$('#status');el.textContent=conflict?'Conflit à résoudre':busy?'Synchronisation…':!navigator.onLine?'Hors ligne':cloudError?'Sync à vérifier':!token?'Sur cet appareil':box.dirty?'En attente':'Synchronisé'}
-function modal(title,fields,fn,submit='Enregistrer'){const d=$('dialog');if(d.open)d.close();$('#form').innerHTML='<h2>'+esc(title)+'</h2>'+fields+'<div class="row">'+button('cancel','Annuler')+'<button class="primary">'+submit+'</button></div>';dialogSubmit=fn;d.showModal()}
-$('#form').onsubmit=event=>{event.preventDefault();const values=Object.fromEntries(new FormData(event.target));$('dialog').close();Promise.resolve(dialogSubmit(values)).catch(e=>alert(e.message))};
+function modal(title,fields,fn,submit='Enregistrer'){const d=$('#form').closest('dialog');if(d.open)d.close();$('#form').innerHTML='<h2>'+esc(title)+'</h2>'+fields+'<div class="row">'+button('cancel','Annuler')+'<button class="primary">'+submit+'</button></div>';dialogSubmit=fn;d.showModal()}
+$('#form').onsubmit=event=>{event.preventDefault();const values=Object.fromEntries(new FormData(event.target));$('#form').closest('dialog').close();Promise.resolve(dialogSubmit(values)).catch(e=>alert(e.message))};
 const nameInput=(name='name')=>'<input name="'+name+'" maxlength="80" required pattern=".*[^ ].*" autocomplete="off">';
 function nextPlan(){const last=state.sessions.filter(s=>s.done).sort((a,b)=>b.date.localeCompare(a.date)||b.created-a.created)[0];return last?(last.plan+1)%programs.length:0}
 const gymLine=()=>field('Salle active',select('gym',gyms()));
@@ -46,7 +46,7 @@ function render(){
  if(!state.gyms.some(g=>g.id===gym))gym=state.gyms[0]?.id||'';
  if(['session','overview','report'].includes(page)&&!session())page='home';
  $('nav').innerHTML=navs.map(([id,icon,n])=>button('nav',navGlyph(id)+n,id,(page===id||(id==='history'&&page==='report')||(id==='home'&&['session','overview'].includes(page)))?'on':'')).join('');
- $('#app').innerHTML=page==='home'?(configured&&!token&&!localStorage.getItem('onemore.local')?onboarding():dashboard()):page==='settings'?settings():page==='session'?focusedWorkout(session()):page==='report'?sessionReport(session()):page==='overview'?overview(session()):!gym?dashboard():page==='stats'?(returnFromProgress?button('backWorkout','‹ Revenir à mon exercice','','link'):'')+stats():history();statusText();
+ $('#app').innerHTML=page==='home'?(configured&&!token&&!localStorage.getItem('onemore.local')?onboarding():dashboard()):page==='pickProgram'?programPicker():page==='settings'?settings():page==='session'?focusedWorkout(session()):page==='report'?sessionReport(session()):page==='overview'?overview(session()):!gym?dashboard():page==='stats'?(returnFromProgress?button('backWorkout','‹ Revenir à mon exercice','','link'):'')+stats():history();statusText();
  if(finishNotice)showCelebration('finish',$('#app .record-badge')?.parentElement);
  else if(movedNotice){animateMove();showCelebration('move')}
  else if(setNotice)showCelebration('set');
@@ -58,7 +58,8 @@ function eraseOK(x){return !x.sets.some(r=>r.ok||r.kg!==''||r.reps!=='')||confir
 document.addEventListener('click',e=>{
  const b=e.target.closest('[data-act]');if(!b)return;
  const a=b.dataset.act,id=b.dataset.id||'',[i,j]=id.split(',').map(Number),s=session(),x=s?.items[i];
- if(a==='cancel')return $('dialog').close();
+ if(a==='pickProgram'){page='pickProgram';render();scrollTo(0,0);return}
+ if(a==='cancel')return $('#form').closest('dialog').close();
  if(a==='settings'||a==='nav'){returnFromProgress=null;movingPlan='';if(id==='stats'){detail=false;statsTab='progress'}page=a==='settings'?'settings':id;render();scrollTo(0,0);return}
  if(a==='gym')return modal('Ajouter une salle',field('Nom de la salle',nameInput()),v=>{const name=v.name.trim();if(!name||state.gyms.some(g=>g.name.toLowerCase()===name.toLowerCase()))return alert('Choisis un nom de salle distinct.');gym=uid();state.gyms.push({id:gym,name});localStorage.setItem('repere.gym',gym);changed();render()});
  if(a==='custom')return modal('Créer un exercice',field('Nom',nameInput())+field('Groupe musculaire principal',nameInput('muscle'))+field('Type','<select name="kind">'+kinds.map(k=>option(k,k==='pdc'?'Poids du corps':k,'machine')).join('')+'</select>'),v=>{state.ex.push({id:uid(),name:v.name.trim(),muscle:v.muscle.trim(),kind:v.kind});changed();render()});

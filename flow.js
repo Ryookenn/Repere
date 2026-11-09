@@ -15,12 +15,20 @@ function listRow(x,i,action="homeItem",sessionDone=false){
  return button(action,inner+'<span aria-hidden="true">›</span>',i,'exercise-row');
 }
 function dashboard(){
- if(!state.gyms.length)return '<section class="cover"><div class="cover-art">'+exerciseArt('0')+'</div><small>One More</small><h1>Ma première séance</h1><p>Choisis ta salle pour y retrouver tes charges à chaque visite.</p>'+button('gym','Ajouter ma salle','','primary')+'</section>';
- const {draft,scheduled,drafts}=homeChoice();
- const selected=draft||scheduled,idx=selected?selected.plan:nextPlan(),items=draft?draft.items:state.plans[idx].map(ex=>({ex}));
- const heroItem=items[draft?position(draft):0];
- const switcher='<details class="switcher"><summary>Choisir une autre séance</summary>'+programs.map((n,i)=>button('start',esc(n)+'　→',i,'choice')).join('')+'</details>';
- return gymLine()+'<section class="cover"><div class="cover-art">'+exerciseArt(heroItem?.ex)+'</div><small>'+(draft?'Séance en cours':scheduled?'Prévue aujourd’hui':'Prochaine séance')+'</small><h1>'+programs[idx]+'</h1><p>'+items.length+' exercices · '+esc(gymName(selected?.gym||gym))+(draft?' · '+dateLabel(draft.date):'')+'</p>'+button(draft?'open':scheduled?'launchPlan':'start',draft?'Reprendre ma séance →':scheduled?'Démarrer la séance prévue →':'Commencer ma séance →',selected?selected.id:idx,'primary')+'</section>'+switcher+(drafts.length>0?'<details><summary>Autres séances en cours</summary>'+drafts.map(s=>button('open',programs[s.plan]+' · '+dateLabel(s.date),s.id,'choice')).join('')+'</details>':'')+'<h2 class="list-title">Au programme</h2><div class="exercise-list">'+items.map((x,i)=>listRow(x,i)).join('')+'</div>';
+ const planned=(state.agenda||[]).filter(entry=>entry.date===today());
+ const drafts=state.sessions.filter(entry=>!entry.done).sort((a,b)=>b.created-a.created);
+ const rows=(entries,action,label,style)=>entries.map(entry=>
+  '<article class="home-event"><div><strong>'+esc(programs[entry.plan])+'</strong><small>'+esc(gymName(entry.gym))+'</small></div>'+button(action,label,entry.id,style)+'</article>').join('');
+ const startAction=state.gyms.length?'pickProgram':'gym';
+ const startLabel=state.gyms.length?'Lancer une séance':'Ajouter ma première salle';
+ return '<section class="home-launch"><small>'+atNoon(today()).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+'</small><h1>Ma séance</h1>'+
+ (planned.length?'<h2>Au programme aujourd’hui</h2>'+rows(planned,'launchPlan','Commencer','primary'):'')+
+ button(startAction,startLabel,'',planned.length?'wide':'wide primary')+'</section>'+
+ (drafts.length?'<section><h2>En cours</h2>'+rows(drafts,'open','Reprendre','')+'</section>':'');
+}
+function programPicker(){
+ return button('nav','‹ Ma séance','home','link')+'<h1>Choisir ma séance</h1>'+gymLine()+
+ '<div class="program-list">'+programs.map((name,i)=>button('start','<span><b>'+esc(name)+'</b><small>'+state.plans[i].length+' exercices</small></span><span aria-hidden="true">›</span>',i,'program-choice')).join('')+'</div>';
 }
 function overview(s){
  const total=s.items.reduce((n,x)=>n+x.sets.filter(r=>r.ok).length,0);
