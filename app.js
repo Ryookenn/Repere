@@ -56,7 +56,7 @@ function render(){
  if(!state.gyms.some(g=>g.id===gym))gym=state.gyms[0]?.id||'';
  if(['session','overview','report'].includes(page)&&!session())page='home';
  $('nav').innerHTML=navs.map(([id,icon,n])=>button('nav',navGlyph(id)+n,id,(page===id||(id==='history'&&page==='report')||(id==='home'&&['session','overview'].includes(page)))?'on':'')).join('');
- $('#app').innerHTML=page==='home'?(configured&&!token&&!localStorage.getItem('onemore.local')?onboarding():dashboard()):page==='pickProgram'?programPicker():page==='settings'?settings():page==='session'?focusedWorkout(session()):page==='report'?sessionReport(session()):page==='overview'?overview(session()):!gym?dashboard():page==='stats'?(returnFromProgress?button('backWorkout','‹ Revenir à mon exercice','','link'):'')+stats():history();statusText();
+ $('#app').innerHTML=page==='home'?(configured&&!token&&!localStorage.getItem('onemore.local')?onboarding():dashboard()):page==='pickProgram'?programPicker():page==='settings'?settings():page==='session'?focusedWorkout(session()):page==='report'?sessionReport(session()):page==='overview'?overview(session()):!gym?dashboard():page==='stats'?(returnFromProgress?button('backWorkout','‹ Revenir à mon exercice','','link'):'')+stats():history();statusText();updateRestCard();
  if(finishNotice)showCelebration('finish',$('#app .record-badge')?.parentElement);
  else if(movedNotice){animateMove();showCelebration('move')}
  else if(setNotice){
@@ -80,7 +80,7 @@ document.addEventListener('click',e=>{
  if(a==='start')return start(+id);
  if(a==='retro')return chooseSession('Saisir une séance',journalDay,v=>{gym=v.gym;start(v.plan);session().date=v.date;changed();render()},true);
  if(a==='schedule')return chooseSession('Planifier le '+dateLabel(journalDay),journalDay,v=>{state.agenda??=[];state.agenda.push({...v,planned:true});changed();render()});
- if(a==='unplan'){if(confirm('Retirer cette séance du planning ?')){state.agenda=state.agenda.filter(t=>t.id!==id);changed();render()}return}
+ if(a==='unplan'){const entry=state.agenda?.find(t=>t.id===id);if(entry&&confirm('Annuler '+programs[entry.plan]+' du '+dateLabel(entry.date)+' à '+gymName(entry.gym)+' ?')){state.agenda=state.agenda.filter(t=>t.id!==id);changed();render()}return}
  if(a==='launchPlan')return launchScheduled(id);
  if(a==='editReport'&&s?.done){page='overview';render();scrollTo(0,0);return}
  if(a==='reportJournal'&&s){journalDay=s.date;journalGym=s.gym;page='history';render();scrollTo(0,0);return}
@@ -124,6 +124,10 @@ document.addEventListener('click',e=>{
  if(a==='sync')return sync();
  if(a==='resolve'){if(confirm('Remplacer le carnet local par la version Supabase ?'))sync(true);return}
  if(a==='export'){const link=document.createElement('a');link.href=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:'application/json'}));link.download='one-more-carnet.json';link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);return}
+ if(a==='jumpSheet'){document.querySelector('#jumpSheet').showModal();return}
+ if(a==='closeJump'){document.querySelector('#jumpSheet').close();return}
+ if(a==='extraRest'){const end=Number(localStorage.getItem('repere.timer'));if(end>Date.now())localStorage.setItem('repere.timer',end+15000);tick();return}
+ if(a==='fixSet')return correctSet(s,x,j);
  if(a==='stop'){localStorage.removeItem('repere.timer');tick();return}
  if(a==='planAdd')return askExercise(ex=>state.plans[plan].push(ex));
  if(a==='addItem')return askExercise(ex=>s.items.push(newItem(ex)));
@@ -176,7 +180,7 @@ document.addEventListener('change',e=>{
  if(key==='A'||key==='B')pair[key==='A'?0:1]=v;
  render()
 });
-function tick(){const end=Number(localStorage.getItem('repere.timer'));const el=$('#clock');const undo=document.querySelector('[data-act="undo"]');if(undo&&(!undoSet||Date.now()>undoSet.expires))undo.hidden=true;el.hidden=!end;if(end){const left=Math.max(0,Math.ceil((end-Date.now())/1000));const pulse=!left&&lastRestEnd!==end;if(pulse){lastRestEnd=end;if(Date.now()-end<10000&&document.visibilityState==='visible'&&page==='session')showCelebration('rest')}el.innerHTML=(pulse?'<b class="rest-pulse">':'<b>')+(left?'Repos · '+Math.floor(left/60)+':'+String(left%60).padStart(2,'0'):'Repos terminé')+'</b> '+button('stop','Fermer')}}
+function tick(){const end=Number(localStorage.getItem('repere.timer'));const el=$('#clock');const undo=document.querySelector('[data-act="undo"]');if(undo&&(!undoSet||Date.now()>undoSet.expires))undo.hidden=true;const inlineRest=updateRestCard();el.hidden=!end||inlineRest;if(end){const left=Math.max(0,Math.ceil((end-Date.now())/1000));const pulse=!left&&lastRestEnd!==end;if(pulse){lastRestEnd=end;if(Date.now()-end<10000&&document.visibilityState==='visible'&&page==='session')showCelebration('rest')}el.innerHTML=(pulse?'<b class="rest-pulse">':'<b>')+(left?'Repos · '+Math.floor(left/60)+':'+String(left%60).padStart(2,'0'):'Repos terminé')+'</b> '+button('stop','Fermer')}}
 setInterval(tick,1000);tick();render();sync();
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){tick();sync()}});
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(console.error);

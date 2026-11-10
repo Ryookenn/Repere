@@ -20,8 +20,8 @@ function history(){
  }
  const selected=entries.filter(s=>s.date===journalDay);
  const agenda=selected.map(s=>{
-  const planned=s.planned===true;
-  const actions=planned?(s.date<=today()?button('launchPlan','Commencer',s.id,'primary'):'')+button('movePlan','Déplacer',s.id)+button('unplan','Retirer',s.id):button('open',s.done?'Voir la séance':'Reprendre',s.id);
+  const planned=(state.agenda||[]).includes(s);
+  const actions=planned?(s.date<=today()?button('launchPlan','Commencer',s.id,'primary'):'')+button('movePlan','Déplacer',s.id)+button('unplan','Annuler la séance planifiée',s.id):button('open',s.done?'Voir la séance':'Reprendre',s.id);
   return '<article class="event p'+s.plan+'"><small>'+esc(gymName(s.gym))+' · '+(planned?'Planifiée':s.done?'Terminée':'En cours')+'</small><h3>'+programs[s.plan]+'</h3>'+actions+'</article>';
  }).join('');
  const moving=state.agenda?.find(t=>t.id===movingPlan);

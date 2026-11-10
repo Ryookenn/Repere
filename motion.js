@@ -101,3 +101,34 @@ document.addEventListener('pointerdown',event=>{
  svg.onpointermove=read;
  svg.onlostpointercapture=()=>{svg.onpointermove=null;svg.onlostpointercapture=null;render()};
 });
+
+// Keep the input mounted while repeating, so pointer capture survives each increment.
+document.addEventListener('pointerdown',event=>{
+ const key=event.target.closest('.steps button');
+ if(!key||event.button!==0||!event.isPrimary||!key.dataset.id.endsWith(',kg'))return;
+ const input=key.closest('.measure').querySelector('input');
+ const [i]=key.dataset.id.split(',').map(Number),s=session();
+ const delta=loadStep(s,s.items[i])*(key.dataset.act==='plus'?1:-1);
+ let repeated=false,loop;
+ const increment=()=>{
+  repeated=true;
+  input.value=Math.max(0,Number((Number(input.value||0)+delta).toFixed(2)));
+  input.dispatchEvent(new Event('input',{bubbles:true}));
+ };
+ const timer=setTimeout(()=>{increment();loop=setInterval(increment,110)},420);
+ key.setPointerCapture(event.pointerId);
+ function stop(){
+  clearTimeout(timer);clearInterval(loop);
+  key.removeEventListener('lostpointercapture',stop);
+  key.removeEventListener('pointerup',stop);
+  key.removeEventListener('pointercancel',stop);
+  window.removeEventListener('blur',stop);
+  if(repeated){
+   const suppress=e=>{e.stopPropagation();e.preventDefault()};
+   key.addEventListener('click',suppress,{once:true});
+   setTimeout(()=>key.removeEventListener('click',suppress),300);
+  }
+ }
+ key.addEventListener('pointerup',stop);key.addEventListener('pointercancel',stop);
+ key.addEventListener('lostpointercapture',stop);window.addEventListener('blur',stop);
+});

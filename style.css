@@ -199,3 +199,13 @@ button,.touch-control{transition:scale .12s ease-out,filter .12s ease-out;touch-
 button:active,.touch-control:active{scale:.96;filter:brightness(.92)}
 @media(prefers-reduced-motion:no-preference){.arriving .step-head{animation:stage-arrive .42s .55s both}@keyframes stage-arrive{from{opacity:.5;transform:translateY(9px)}to{opacity:1;transform:none}}}
 @media(prefers-reduced-motion:reduce){button,.touch-control{transition:none}button:active,.touch-control:active{scale:1}}
+#restCard:not([hidden]){display:grid;gap:6px;background:var(--ink);color:var(--bg);border-radius:18px;padding:18px}
+#restTime{font:650 38px/1.1 system-ui;font-variant-numeric:tabular-nums}
+#restCard button{margin:8px 6px 0 0}
+#jumpSheet{inset:auto 0 0;margin:auto auto 0;width:min(100%,520px);max-height:80dvh;box-sizing:border-box;border:0;border-radius:24px 24px 0 0;padding:20px 20px max(20px,env(safe-area-inset-bottom));background:var(--panel);color:var(--ink)}
+#jumpSheet::backdrop{background:#1119}
+.spotlight{display:block;padding:16px;margin:16px 0;background:var(--wash);color:var(--ink);border-left:3px solid var(--red);text-decoration:none;font-weight:650}
+.steps button{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#restCard:not([hidden])+.set-stage{border-top-left-radius:0;border-top-right-radius:0;margin-top:0}
+#restCard:not([hidden]){border-bottom-left-radius:0;border-bottom-right-radius:0;margin-bottom:0}
+#restCard:not([hidden])+.set-stage .step-head{display:none}

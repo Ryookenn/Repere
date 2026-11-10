@@ -17,6 +17,7 @@ function launchScheduled(id,first=0){
 function sessionReport(s){
  const celebrate=finishNotice===s.id;
  const gone=new Set(),lines=[];
+ let highlight=null,firstVisit=true;
  for(const x of s.items){
   const key=x.ex+'|'+x.mode;
   if(gone.has(key))continue;
@@ -28,9 +29,18 @@ function sessionReport(s){
   const series=(fixed||x.mode==='pdc')?(x.mode==='pdc'?'':fmt(rows[0].kg)+' kg · ')+rows.map(r=>r.reps).join(' / ')+' rép.':rows.map(r=>setText(r,x.mode)).join('　/　');
   const message=recordMessage(hist,index,x.mode);
   const badge=message?'<div class="record-badge'+(celebrate?' record-enter':'')+'"><strong>Nouveau record</strong> · '+message+'</div>':'';
-  lines.push('<article class="report-row"><span class="thumbnail">'+exerciseArt(x.ex)+'</span><div><small>'+esc(exercise(x.ex).muscle)+(x.mode==='charge'?'':' · '+esc(modes[x.mode]))+'</small><h3>'+esc(exercise(x.ex).name)+'</h3><b>'+series+'</b>'+badge+progressBreakdown(hist[index-1],rows,x.mode)+'</div></article>');
+  const prev=hist[index-1];
+  if(prev){
+   firstVisit=false;
+   const paired=rows.slice(0,prev.rows.length);
+   const comparable=paired.every((r,k)=>x.mode==='pdc'||+r.kg===+prev.rows[k].kg);
+   const gain=paired.reduce((n,r,k)=>n+Number(r.reps)-Number(prev.rows[k].reps),0);
+   const rank=comparable&&gain>0?gain:0;
+   if(!highlight||rank>highlight.rank)highlight={rank,id:'result-'+lines.length,text:exercise(x.ex).name+' · '+compareRows(prev.rows,rows,x.mode)};
+  }
+  lines.push('<article id="result-'+lines.length+'" class="report-row"><span class="thumbnail">'+exerciseArt(x.ex)+'</span><div><small>'+esc(exercise(x.ex).muscle)+(x.mode==='charge'?'':' · '+esc(modes[x.mode]))+'</small><h3>'+esc(exercise(x.ex).name)+'</h3><b>'+series+'</b>'+badge+progressBreakdown(hist[index-1],rows,x.mode)+'</div></article>');
  }
- return '<div class="work-top">'+button('reportJournal','‹ Journal','','link')+button('editReport','Modifier',s.id)+'</div>'+'<div class="tag">Bilan de progression</div><h1>'+programs[s.plan]+'</h1><p>'+dateLabel(s.date)+' · '+esc(gymName(s.gym))+'</p>'+lines.join('');
+ return '<div class="work-top">'+button('reportJournal','‹ Journal','','link')+button('editReport','Modifier',s.id)+'</div>'+'<div class="tag">Bilan de progression</div><h1>'+programs[s.plan]+'</h1><p>'+dateLabel(s.date)+' · '+esc(gymName(s.gym))+'</p>'+(firstVisit?'<p class="spotlight">Tes repères sont enregistrés pour ta prochaine visite.</p>':'<a class="spotlight" href="#'+highlight.id+'">'+esc(highlight.text)+' ↓</a>')+lines.join('');
 }
 function pinMatches(p){return p.ex===statEx&&p.mode===mode&&p.gym===gym}
 function pinToggle(){

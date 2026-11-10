@@ -26,6 +26,7 @@ function validateRow(s,x,i,j){
  const before=JSON.stringify(x.sets),priorTimer=localStorage.getItem('repere.timer');
  const row=materialize(s,x,j);row.ok=!was;
  if(was){x.finished=false;undoSet=null;return true}
+ row.validatedAt=Date.now();
  setNotice=s.done?'':'Série '+(j+1)+' validée · '+setText(row,x.mode);
  if(!s.done&&!x.finished&&!x.sets.some(r=>!r.ok)&&x.sets.length<targetSets(s,x))x.sets.push(emptySet());
  const seconds=exercise(x.ex).rest??state.rest;
@@ -59,3 +60,29 @@ function openProgress(s,x){
 }
 function onboarding(){return '<section class="cover"><small>One More</small><h1>Retrouve ton carnet</h1><p>Connecte ton compte pour sauvegarder tes séances et retrouver tes salles.</p>'+button('login','Me connecter','','primary')+'</section>'+button('local','Continuer sur cet appareil','','link')}
 function lastSyncLabel(){return box.lastSync?new Date(box.lastSync).toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'medium'}):'En attente de la première vérification'}
+
+function restCard(s,x,pending,reference){
+ if(s.done)return '';
+ const next=pending>=0?'À suivre · '+esc(exercise(x.ex).name)+' · Série '+(pending+1):'Dernière série validée';
+ return '<section id="restCard" hidden><small>Repos</small><strong id="restTime"></strong><b>'+next+'</b>'+
+ (pending>=0&&reference?'<small>Dernière visite · '+setText(reference,x.mode)+'</small>':'')+
+ '<div>'+button('extraRest','+15 s')+button('stop','Reprendre maintenant')+'</div></section>';
+}
+function updateRestCard(){
+ const card=document.querySelector('#restCard');
+ if(!card)return false;
+ const left=Math.max(0,Math.ceil((Number(localStorage.getItem('repere.timer'))-Date.now())/1000));
+ card.hidden=!left||localStorage.getItem('onemore.timerOwner')!==active;
+ if(!card.hidden)document.querySelector('#restTime').textContent=Math.floor(left/60)+':'+String(left%60).padStart(2,'0');
+ return !card.hidden;
+}
+function correctSet(s,x,j){
+ const row=x.sets[j];
+ if(!row?.ok)return;
+ const kg=x.mode==='pdc'?'':field('Charge (kg)','<input type="number" name="kg" step="any" min="0" required value="'+esc(row.kg)+'">');
+ modal('Modifier la série '+(j+1),kg+field('Répétitions','<input type="number" name="reps" step="1" min="1" required value="'+esc(row.reps)+'">'),values=>{
+  const corrected={...row,...values,edited:true};
+  if(!valid(corrected,x.mode))return;
+  Object.assign(row,corrected);undoSet=null;changed();render();
+ });
+}
