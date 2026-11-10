@@ -1,4 +1,4 @@
-const prefix='repere-'+self.registration.scope+'-',cacheName=prefix+'10-studio';
+const prefix='repere-'+self.registration.scope+'-',cacheName=prefix+'11-progression';
 const assets=['./','./index.html','./theme.js','./mark.svg','./style.css','./pictos.js','./flow.js','./training.js','./progress.js','./journal.js','./edition6.js','./motion.js','./app.js','./model.js','./config.js','./cloud.js','./manifest.webmanifest','./icon-180.png','./icon-192.png','./icon-512.png'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(cacheName).then(c=>c.addAll(assets.map(url=>new Request(url,{cache:'reload'}))))));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith(prefix)&&k!==cacheName).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));

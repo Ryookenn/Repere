@@ -28,9 +28,9 @@ function sessionReport(s){
   const series=(fixed||x.mode==='pdc')?(x.mode==='pdc'?'':fmt(rows[0].kg)+' kg · ')+rows.map(r=>r.reps).join(' / ')+' rép.':rows.map(r=>setText(r,x.mode)).join('　/　');
   const message=recordMessage(hist,index,x.mode);
   const badge=message?'<div class="record-badge'+(celebrate?' record-enter':'')+'"><strong>Nouveau record</strong> · '+message+'</div>':'';
-  lines.push('<article class="report-row"><span class="thumbnail">'+exerciseArt(x.ex)+'</span><div><small>'+esc(exercise(x.ex).muscle)+(x.mode==='charge'?'':' · '+esc(modes[x.mode]))+'</small><h3>'+esc(exercise(x.ex).name)+'</h3><b>'+series+'</b>'+badge+'<p>'+compareRows(hist[index-1]?.rows,rows,x.mode)+'</p></div></article>');
+  lines.push('<article class="report-row"><span class="thumbnail">'+exerciseArt(x.ex)+'</span><div><small>'+esc(exercise(x.ex).muscle)+(x.mode==='charge'?'':' · '+esc(modes[x.mode]))+'</small><h3>'+esc(exercise(x.ex).name)+'</h3><b>'+series+'</b>'+badge+progressBreakdown(hist[index-1],rows,x.mode)+'</div></article>');
  }
- return '<div class="work-top">'+button('reportJournal','‹ Journal','','link')+button('editReport','Modifier',s.id)+'</div>'+'<div class="tag">Bilan de séance</div><h1>'+programs[s.plan]+'</h1><p>'+dateLabel(s.date)+' · '+esc(gymName(s.gym))+'</p>'+lines.join('');
+ return '<div class="work-top">'+button('reportJournal','‹ Journal','','link')+button('editReport','Modifier',s.id)+'</div>'+'<div class="tag">Bilan de progression</div><h1>'+programs[s.plan]+'</h1><p>'+dateLabel(s.date)+' · '+esc(gymName(s.gym))+'</p>'+lines.join('');
 }
 function pinMatches(p){return p.ex===statEx&&p.mode===mode&&p.gym===gym}
 function pinToggle(){
@@ -45,3 +45,20 @@ function pinnedList(){
 }
 const statusIcon=s=>s.planned?'planned':s.done?'complete':'ongoing';
 const statusName=s=>s.planned?'Planifiée':s.done?'Terminée':'En cours';
+
+function progressBreakdown(previous,rows,mode){
+ if(!previous)return '<p>Première référence dans cette salle pour cette variante.</p>';
+ const before=previous.rows;
+ const count=Math.max(before.length,rows.length);
+ const lines=Array.from({length:count},(_,i)=>{
+  const old=before[i],now=rows[i];
+  const comparable=old&&now&&(mode==='pdc'||+old.kg===+now.kg);
+  let change='Charge modifiée';
+  if(!old)change='Ajoutée';
+  else if(!now)change='En moins';
+  else if(comparable)change=signed(now.reps-old.reps)+' rép.';
+  const gain=comparable&&+now.reps>+old.reps;
+  return '<tr><th scope="row">'+(i+1)+'</th><td>'+(old?setText(old,mode):'—')+'</td><td>'+(now?setText(now,mode):'—')+'</td><td class="'+(gain?'rep-gain':'')+'">'+change+'</td></tr>';
+ }).join('');
+ return '<div class="progress-recap"><strong>'+compareRows(before,rows,mode)+'</strong><small>Comparé au '+dateLabel(previous.s.date)+'</small><table><thead><tr><th>Série</th><th>Avant</th><th>Ce jour</th><th>Écart</th></tr></thead><tbody>'+lines+'</tbody></table></div>';
+}

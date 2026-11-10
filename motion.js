@@ -51,6 +51,13 @@ function showCelebration(kind,record){
   if(next>=0)title.textContent='Repos terminé · Série '+(next+1);
  }
  card.append(title);
+ if(kind==='set'){
+  const s=session(),item=s.items[position(s)];
+  const next=item.sets.findIndex(row=>!row.ok);
+  const direction=document.createElement('small');
+  direction.textContent=next<0?'Toutes les séries sont validées':'À suivre · Série '+(next+1);
+  card.append(direction);
+ }
  if(record){
   const detail=document.createElement('small');
   detail.textContent=record.querySelector('h3').textContent+' · '+record.querySelector('.record-badge').textContent;

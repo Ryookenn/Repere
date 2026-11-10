@@ -26,7 +26,7 @@ function validateRow(s,x,i,j){
  const before=JSON.stringify(x.sets),priorTimer=localStorage.getItem('repere.timer');
  const row=materialize(s,x,j);row.ok=!was;
  if(was){x.finished=false;undoSet=null;return true}
- setNotice=s.done?'':setText(row,x.mode);
+ setNotice=s.done?'':'Série '+(j+1)+' validée · '+setText(row,x.mode);
  if(!s.done&&!x.finished&&!x.sets.some(r=>!r.ok)&&x.sets.length<targetSets(s,x))x.sets.push(emptySet());
  const seconds=exercise(x.ex).rest??state.rest;
  if(!s.done&&s.date===today()&&seconds){localStorage.setItem('onemore.timerOwner',s.id);localStorage.setItem('repere.timer',Date.now()+seconds*1000)}
@@ -42,6 +42,7 @@ function restoreValidation(s,x){
 }
 function finishExercise(s,x,i){
  if(x.sets.some(r=>!r.ok&&(r.reps!==''||r.kg!==''))&&!confirm('Terminer cet exercice en conservant uniquement les séries validées ?'))return;
+ navigator.vibrate?.(15);
  x.sets=x.sets.filter(r=>r.ok);x.finished=true;undoSet=null;changed();
  const next=s.items.findIndex((item,k)=>k>i&&!item.finished);
  const index=next>=0?next:s.items.findIndex(item=>!item.finished);

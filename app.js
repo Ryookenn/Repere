@@ -1,6 +1,16 @@
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const option=(v,label,sel)=>'<option value="'+esc(v)+'" '+(String(v)===String(sel)?'selected':'')+'>'+esc(label)+'</option>';
-const button=(a,label,id='',cls='')=>'<button type="button" class="'+cls+'" data-act="'+a+'" data-id="'+esc(id)+'">'+label+'</button>';
+const tactileActions=new Set(['check','finish','endExercise']);
+const nativeSwitch='switch' in document.createElement('input') && navigator.maxTouchPoints>0 && !navigator.vibrate;
+function actionText(control,text){
+ if(!control)return;
+ if(control.matches('.tap-switch')){
+  control.previousElementSibling.textContent=text;
+  control.setAttribute('aria-label',text);
+ }else control.textContent=text;
+}
+const button=(a,label,id='',cls='')=>nativeSwitch&&tactileActions.has(a)?
+ '<span class="touch-control '+cls+'"><span>'+label+'</span><input role="button" class="tap-switch" aria-label="'+esc(label)+'" type="checkbox" switch data-act="'+a+'" data-id="'+esc(id)+'"></span>':'<button type="button" class="'+cls+'" data-act="'+a+'" data-id="'+esc(id)+'">'+label+'</button>';
 const field=(label,html)=>'<label>'+label+html+'</label>';
 const select=(key,html)=>'<select data-key="'+key+'">'+html+'</select>';
 const fmt=n=>Number(n).toLocaleString('fr-FR',{maximumFractionDigits:1});
@@ -49,7 +59,11 @@ function render(){
  $('#app').innerHTML=page==='home'?(configured&&!token&&!localStorage.getItem('onemore.local')?onboarding():dashboard()):page==='pickProgram'?programPicker():page==='settings'?settings():page==='session'?focusedWorkout(session()):page==='report'?sessionReport(session()):page==='overview'?overview(session()):!gym?dashboard():page==='stats'?(returnFromProgress?button('backWorkout','‹ Revenir à mon exercice','','link'):'')+stats():history();statusText();
  if(finishNotice)showCelebration('finish',$('#app .record-badge')?.parentElement);
  else if(movedNotice){animateMove();showCelebration('move')}
- else if(setNotice)showCelebration('set');
+ else if(setNotice){
+  showCelebration('set');
+  const stage=document.querySelector('.set-stage');
+  if(stage){const top=stage.getBoundingClientRect().top;if(top<48||top>innerHeight*.58)stage.scrollIntoView({block:'center',behavior:reduceMotion()?'instant':'smooth'})}
+ }
  finishNotice='';movedNotice='';setNotice=false;
 }
 function askExercise(cb){modal('Choisir un exercice',field('Exercice','<select name="ex">'+exOptions('')+'</select>'),v=>{cb(v.ex);changed();render()})}
@@ -126,18 +140,18 @@ document.addEventListener('click',e=>{
  const key=id.split(',')[2],r=materialize(s,x,j),step=key==='reps'?1:loadStep(s,x);
  r[key]=Math.max(key==='reps'?1:0,Number((Number(r[key]||0)+(a==='plus'?step:-step)).toFixed(2)));r.ok=false;
  }
- if(a==='check'&&!validateRow(s,x,i,j))return;
+ if(a==='check'){if(!validateRow(s,x,i,j))return;if(setNotice)navigator.vibrate?.(18)}
  if(a==='finish'){
  const all=s.items.flatMap(x=>x.sets);
  if(!all.some(r=>r.ok))return alert('Valide au moins une série avec ✓.');
  if(all.some(r=>!r.ok&&(r.reps!==''||r.kg!==''))&&!confirm('Certaines valeurs sont saisies mais non validées. Terminer avec les séries cochées uniquement ?'))return;
- if(!s.done)finishNotice=s.id;
+ if(!s.done){finishNotice=s.id;navigator.vibrate?.([20,45,28])}
  s.items.forEach(x=>x.sets=x.sets.filter(r=>r.ok));s.items=s.items.filter(x=>x.sets.length);s.done=true;journalDay=s.date;journalGym=s.gym;page='report';localStorage.removeItem('repere.timer');tick();scrollTo(0,0)
  }
  changed();render();
  if((a==="plus"||a==="minus")&&!reduceMotion())document.querySelector('[data-input="'+id+'"]')?.animate([{opacity:.45,transform:"translateY(2px)"},{opacity:1,transform:"none"}],150)
 });
-document.addEventListener('input',e=>{const input=e.target;if(!input.dataset.input)return;const [i,j,k]=input.dataset.input.split(',');const x=session().items[i],r=materialize(session(),x,+j);r[k]=input.value;r.ok=false;const check=input.closest('.entry')?.querySelector('[data-act="check"]');if(check)check.textContent=checkLabel(r,x.mode);const panel=input.closest('.completed');if(panel){panel.querySelector('summary').textContent='Série '+(+j+1)+' · à valider';panel.querySelector('[data-act="check"]').textContent='Valider la série'}changed()});
+document.addEventListener('input',e=>{const input=e.target;if(!input.dataset.input)return;const [i,j,k]=input.dataset.input.split(',');const x=session().items[i],r=materialize(session(),x,+j);r[k]=input.value;r.ok=false;const check=input.closest('.entry')?.querySelector('[data-act="check"]');actionText(check,checkLabel(r,x.mode));const panel=input.closest('.completed');if(panel){panel.querySelector('summary').textContent='Série '+(+j+1)+' · à valider';actionText(panel.querySelector('[data-act="check"]'),'Valider la série')}changed()});
 document.addEventListener('change',e=>{
  const key=e.target.dataset.key,v=e.target.value;if(!key)return;
  if(key==='regularGym')regularGym=v;

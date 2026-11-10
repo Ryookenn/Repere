@@ -177,3 +177,25 @@ body:has(.current-set) #clock,body:has(.dock) #clock{bottom:calc(var(--action-bo
 .program-choice:active{background:var(--wash)}
 .thumbnail,.portrait{background:transparent;border:1px solid var(--line);color:var(--ink);border-radius:10px}
 .exercise-art{padding:4px;box-sizing:border-box}
+
+.set-stage{padding:16px;background:var(--panel);border:1px solid var(--line);border-radius:18px}
+.step-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.step-head small,.progress-recap small{display:block;color:var(--muted)}
+.step-head strong{display:block;font:700 clamp(30px,9vw,46px)/1.12 system-ui;font-variant-numeric:tabular-nums;letter-spacing:-.045em}
+.step-head em{font:500 .45em system-ui;color:var(--muted)}
+.step-head>span{color:var(--muted);font-size:.84rem}
+.set-stage progress{width:100%;height:5px;accent-color:var(--red);margin:12px 0}
+.progress-recap{margin-top:12px;grid-column:1/-1}
+.report-row:has(.progress-recap){flex-wrap:wrap}
+.report-row .progress-recap table{width:100%;font:500 clamp(11px,3vw,14px)/1.4 system-ui;font-variant-numeric:tabular-nums}
+.progress-recap td,.progress-recap th{padding:6px 2px;text-align:left}
+.rep-gain{color:var(--red);font-weight:750}
+.touch-control{display:inline-grid;place-items:center;position:relative;min-height:50px;padding:8px 12px;border-radius:14px;background:var(--panel);font-weight:650;text-align:center;box-sizing:border-box}
+.touch-control.primary{background:var(--button);color:var(--on-button)}
+.touch-control.dock{position:fixed}
+.touch-control .tap-switch{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.touch-control:focus-within{outline:2px solid var(--red);outline-offset:2px}
+button,.touch-control{transition:scale .12s ease-out,filter .12s ease-out;touch-action:manipulation}
+button:active,.touch-control:active{scale:.96;filter:brightness(.92)}
+@media(prefers-reduced-motion:no-preference){.arriving .step-head{animation:stage-arrive .42s .55s both}@keyframes stage-arrive{from{opacity:.5;transform:translateY(9px)}to{opacity:1;transform:none}}}
+@media(prefers-reduced-motion:reduce){button,.touch-control{transition:none}button:active,.touch-control:active{scale:1}}
