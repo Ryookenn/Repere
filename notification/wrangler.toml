@@ -1,4 +1,4 @@
-name = "one-more-repos"
+name = "repere"
 main = "worker.js"
 compatibility_date = "2025-05-01"
 [[durable_objects.bindings]]
