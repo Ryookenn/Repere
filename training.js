@@ -30,7 +30,7 @@ function validateRow(s,x,i,j){
  setNotice=s.done?'':'Série '+(j+1)+' validée · '+setText(row,x.mode);
  if(!s.done&&!x.finished&&!x.sets.some(r=>!r.ok)&&x.sets.length<targetSets(s,x))x.sets.push(emptySet());
  const seconds=exercise(x.ex).rest??state.rest;
- if(!s.done&&s.date===today()&&seconds){localStorage.setItem('onemore.timerOwner',s.id);localStorage.setItem('repere.timer',Date.now()+seconds*1000)}
+ if(!s.done&&s.date===today()&&seconds){localStorage.setItem('onemore.restStart',Date.now());localStorage.setItem('onemore.timerOwner',s.id);localStorage.setItem('repere.timer',Date.now()+seconds*1000)}
  undoSet={label:setText(row,x.mode),session:s.id,item:x.id,before,after:JSON.stringify(x.sets),priorTimer,expires:Date.now()+10000};
  tick();return true;
 }
@@ -61,20 +61,22 @@ function openProgress(s,x){
 function onboarding(){return '<section class="cover"><small>One More</small><h1>Retrouve ton carnet</h1><p>Connecte ton compte pour sauvegarder tes séances et retrouver tes salles.</p>'+button('login','Me connecter','','primary')+'</section>'+button('local','Continuer sur cet appareil','','link')}
 function lastSyncLabel(){return box.lastSync?new Date(box.lastSync).toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'medium'}):'En attente de la première vérification'}
 
-function restCard(s,x,pending,reference){
+function restCard(s){
  if(s.done)return '';
- const next=pending>=0?'À suivre · '+esc(exercise(x.ex).name)+' · Série '+(pending+1):'Dernière série validée';
- return '<section id="restCard" hidden><small>Repos</small><strong id="restTime"></strong><b>'+next+'</b>'+
- (pending>=0&&reference?'<small>Dernière visite · '+setText(reference,x.mode)+'</small>':'')+
- '<div>'+button('extraRest','+15 s')+button('stop','Reprendre maintenant')+'</div></section>';
+ return '<details id="restBubble" hidden><summary aria-label="Temps de repos et commandes"><time></time></summary><div>'+button('extraRest','+15 s')+button('stop','Reprendre')+'</div></details>';
 }
 function updateRestCard(){
- const card=document.querySelector('#restCard');
- if(!card)return false;
- const left=Math.max(0,Math.ceil((Number(localStorage.getItem('repere.timer'))-Date.now())/1000));
- card.hidden=!left||localStorage.getItem('onemore.timerOwner')!==active;
- if(!card.hidden)document.querySelector('#restTime').textContent=Math.floor(left/60)+':'+String(left%60).padStart(2,'0');
- return !card.hidden;
+ const bubble=document.querySelector('#restBubble');
+ if(!bubble)return false;
+ const end=Number(localStorage.getItem('repere.timer'));
+ const left=Math.max(0,end-Date.now());
+ bubble.hidden=!left||localStorage.getItem('onemore.timerOwner')!==active;
+ if(bubble.hidden){bubble.open=false;return false}
+ const seconds=Math.ceil(left/1000);
+ bubble.querySelector('time').textContent=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');
+ const start=Number(localStorage.getItem('onemore.restStart'))||end-90000;
+ bubble.style.setProperty('--remaining',Math.min(360,360*left/Math.max(1,end-start))+'deg');
+ return true;
 }
 function correctSet(s,x,j){
  const row=x.sets[j];

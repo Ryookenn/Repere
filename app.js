@@ -180,7 +180,7 @@ document.addEventListener('change',e=>{
  if(key==='A'||key==='B')pair[key==='A'?0:1]=v;
  render()
 });
-function tick(){const end=Number(localStorage.getItem('repere.timer'));const el=$('#clock');const undo=document.querySelector('[data-act="undo"]');if(undo&&(!undoSet||Date.now()>undoSet.expires))undo.hidden=true;const inlineRest=updateRestCard();el.hidden=!end||inlineRest;if(end){const left=Math.max(0,Math.ceil((end-Date.now())/1000));const pulse=!left&&lastRestEnd!==end;if(pulse){lastRestEnd=end;if(Date.now()-end<10000&&document.visibilityState==='visible'&&page==='session')showCelebration('rest')}el.innerHTML=(pulse?'<b class="rest-pulse">':'<b>')+(left?'Repos · '+Math.floor(left/60)+':'+String(left%60).padStart(2,'0'):'Repos terminé')+'</b> '+button('stop','Fermer')}}
+function tick(){syncRestAlert();const end=Number(localStorage.getItem('repere.timer'));const el=$('#clock');const undo=document.querySelector('[data-act="undo"]');if(undo&&(!undoSet||Date.now()>undoSet.expires))undo.hidden=true;const inlineRest=updateRestCard();el.hidden=end<=Date.now()||inlineRest;if(end){const left=Math.max(0,Math.ceil((end-Date.now())/1000));const pulse=!left&&lastRestEnd!==end;if(pulse){lastRestEnd=end;if(Date.now()-end<10000&&document.visibilityState==='visible'&&page==='session')showCelebration('rest')}el.innerHTML=(pulse?'<b class="rest-pulse">':'<b>')+(left?'Repos · '+Math.floor(left/60)+':'+String(left%60).padStart(2,'0'):'Repos terminé')+'</b> '+button('stop','Fermer')}}
 setInterval(tick,1000);tick();render();sync();
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){tick();sync()}});
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(console.error);

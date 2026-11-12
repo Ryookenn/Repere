@@ -209,3 +209,12 @@ button:active,.touch-control:active{scale:.96;filter:brightness(.92)}
 #restCard:not([hidden])+.set-stage{border-top-left-radius:0;border-top-right-radius:0;margin-top:0}
 #restCard:not([hidden]){border-bottom-left-radius:0;border-bottom-right-radius:0;margin-bottom:0}
 #restCard:not([hidden])+.set-stage .step-head{display:none}
+#restBubble{position:relative;margin:0 0 0 auto;padding:0;border:0;background:none}
+#restBubble[hidden]{display:none}
+#restBubble summary{display:grid;place-items:center;width:52px;height:46px;border-radius:24px;border:2px solid transparent;background:linear-gradient(var(--panel),var(--panel)) padding-box,conic-gradient(var(--red) var(--remaining),var(--line) 0) border-box;font:650 13px system-ui;font-variant-numeric:tabular-nums;cursor:pointer;padding:0}
+#restBubble summary::marker,#restBubble summary::-webkit-details-marker{display:none}
+#restBubble>div{position:absolute;right:0;top:50px;z-index:4;display:flex;background:var(--panel);padding:5px;border:1px solid var(--line);border-radius:14px}
+.set-note,.quiet-action,.touch-control.quiet-action{display:inline-flex;align-items:center;min-height:44px;padding:3px 8px;margin:0;background:none;border:0;box-shadow:none;color:var(--muted);font:500 13px system-ui}
+.set-note{display:flex;width:100%;justify-content:center}
+.step-head:has(#restBubble:not([hidden]))>span{display:none}
+body [data-act],summary{touch-action:pan-y pinch-zoom}
