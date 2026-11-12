@@ -1,0 +1,9 @@
+name = "one-more-repos"
+main = "worker.js"
+compatibility_date = "2025-05-01"
+[[durable_objects.bindings]]
+name = "TIMERS"
+class_name = "RestTimer"
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["RestTimer"]
